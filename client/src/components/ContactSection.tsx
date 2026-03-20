@@ -5,7 +5,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Mail, Github, Linkedin, Twitter } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -15,31 +22,25 @@ const socialLinks = [
   {
     icon: Mail,
     label: "Email",
-    value: "ibrahim@example.com",
-    href: "mailto:ibrahim@example.com",
+    value: "2802jayagrawal@gmail.com",
+    href: "mailto:2802jayagrawal@gmail.com",
     color: "from-red-500 to-orange-500",
   },
   {
     icon: Github,
     label: "GitHub",
-    value: "github.com/ibrahim",
-    href: "https://github.com",
+    value: "github.com/Techie-AgrawalJi",
+    href: "https://github.com/Techie-AgrawalJi/",
     color: "from-gray-600 to-gray-800",
   },
   {
     icon: Linkedin,
     label: "LinkedIn",
-    value: "linkedin.com/in/ibrahim",
-    href: "https://linkedin.com",
+    value: "linkedin.com/JayAgrawal",
+    href: "www.linkedin.com/in/techie-agrawalji",
     color: "from-blue-600 to-blue-800",
   },
-  {
-    icon: Twitter,
-    label: "Twitter",
-    value: "@ibrahim_dev",
-    href: "https://twitter.com",
-    color: "from-sky-400 to-sky-600",
-  },
+
 ];
 
 export function ContactSection() {
@@ -51,7 +52,8 @@ export function ContactSection() {
   });
 
   const mutation = useMutation({
-    mutationFn: (data: InsertContact) => apiRequest("POST", "/api/contacts", data),
+    mutationFn: (data: InsertContact) =>
+      apiRequest("POST", "/api/contacts", data),
     onSuccess: () => {
       toast({
         title: "Message Sent Successfully",
@@ -73,26 +75,44 @@ export function ContactSection() {
   };
 
   return (
-    <section id="contact" className="py-24 relative" data-testid="section-contact">
+    <section
+      id="contact"
+      className="py-24 relative"
+      data-testid="section-contact"
+    >
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <div className="text-center mb-16 animate-slide-up">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 gradient-text" data-testid="heading-contact">
+          <h2
+            className="text-4xl md:text-5xl font-bold mb-4 gradient-text"
+            data-testid="heading-contact"
+          >
             Get In Touch
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto mb-6">
-            Have a project in mind or want to collaborate? I'd love to hear from you.
+            Have a project in mind or want to collaborate? I'd love to hear from
+            you.
           </p>
-          <blockquote className="text-lg italic text-muted-foreground/80 max-w-xl mx-auto" data-testid="quote-contact">
+          <blockquote
+            className="text-lg italic text-muted-foreground/80 max-w-xl mx-auto"
+            data-testid="quote-contact"
+          >
             "Communication is the key to success."
-            <footer className="text-sm font-normal mt-1 not-italic">— Unknown</footer>
+            <footer className="text-sm font-normal mt-1 not-italic">
+              — Unknown
+            </footer>
           </blockquote>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-12">
           <div className="animate-slide-up">
-            <h3 className="text-2xl font-semibold mb-6 text-foreground">Send a Message</h3>
+            <h3 className="text-2xl font-semibold mb-6 text-foreground">
+              Send a Message
+            </h3>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-6"
+              >
                 <FormField
                   control={form.control}
                   name="name"
@@ -160,7 +180,9 @@ export function ContactSection() {
           </div>
 
           <div className="animate-slide-up" style={{ animationDelay: "150ms" }}>
-            <h3 className="text-2xl font-semibold mb-6 text-foreground">Connect With Me</h3>
+            <h3 className="text-2xl font-semibold mb-6 text-foreground">
+              Connect With Me
+            </h3>
             <div className="grid gap-4">
               {socialLinks.map((social) => {
                 const Icon = social.icon;
@@ -176,12 +198,18 @@ export function ContactSection() {
                       rel="noopener noreferrer"
                       className="flex items-center gap-4 p-4"
                     >
-                      <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${social.color} flex items-center justify-center shrink-0`}>
+                      <div
+                        className={`w-10 h-10 rounded-lg bg-gradient-to-br ${social.color} flex items-center justify-center shrink-0`}
+                      >
                         <Icon className="w-5 h-5 text-white" />
                       </div>
                       <div>
-                        <p className="font-medium text-foreground">{social.label}</p>
-                        <p className="text-sm text-muted-foreground">{social.value}</p>
+                        <p className="font-medium text-foreground">
+                          {social.label}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {social.value}
+                        </p>
                       </div>
                     </a>
                   </Card>
