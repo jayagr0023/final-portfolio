@@ -78,24 +78,23 @@ Preferred communication style: Simple, everyday language.
 
 ### Data Storage Solutions
 
-**Current Implementation**
-- In-memory Map-based storage for contacts (MemStorage class)
+**Contacts — MongoDB**
+- Contacts are stored in a MongoDB `portfolio` database, `contacts` collection
+- Connection via `MONGODB_URI` environment variable (set a real URI in Secrets to enable)
+- Falls back gracefully to an in-memory Map when `MONGODB_URI` is a placeholder or unreachable
 - UUID generation for contact IDs using Node's crypto module
-- Automatic timestamp generation for created_at fields
+- Automatic timestamp generation for createdAt fields
 - Data sorted by creation date (newest first)
 
-**Database Configuration (Ready for Integration)**
-- Drizzle ORM configured for PostgreSQL
-- Neon Database serverless driver (@neondatabase/serverless)
-- Connection via DATABASE_URL environment variable
-- Migration system configured (drizzle-kit) with migrations output to /migrations directory
-- Schema location: shared/schema.ts for shared types
+**Projects — Static / Hardcoded**
+- Projects are defined as a static array in `client/src/pages/Projects.tsx`
+- No database integration; the owner edits the `PROJECTS` array in that file to add/update projects
+- No API routes exist for projects
 
 **Schema Design**
-- Contacts table with fields: id (UUID), name, email, message, createdAt
-- Type safety through Drizzle's type inference
-- Zod validation schemas derived from Drizzle schema
-- Separation of insert types (without generated fields) and select types
+- `shared/schema.ts` uses pure Zod (no Drizzle) for contact validation
+- `Contact` and `Project` are plain TypeScript interfaces
+- PostgreSQL/Drizzle ORM has been fully removed from the project
 
 ### External Dependencies
 

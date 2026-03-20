@@ -1,27 +1,41 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ExternalLink, Github, Code2 } from "lucide-react";
 import type { Project } from "@shared/schema";
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Add or edit your projects here. Each entry will appear as a card on the page.
+// ─────────────────────────────────────────────────────────────────────────────
+const PROJECTS: Project[] = [
+  {
+    id: "1",
+    title: "Portfolio Website",
+    description: "A modern personal portfolio built with React, TypeScript, and Express.",
+    longDescription:
+      "This very site — featuring smooth animations, dark-mode design, a contact form backed by MongoDB, and a fully responsive layout.",
+    technologies: ["React", "TypeScript", "Express", "MongoDB", "Tailwind CSS"],
+    demoUrl: null,
+    githubUrl: null,
+    featured: true,
+    imageUrl: null,
+    createdAt: new Date("2024-01-01"),
+  },
+  // Add more projects below by copying the block above ↑
+];
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function Projects() {
   const [selectedTech, setSelectedTech] = useState<string | null>(null);
 
-  const { data: projects = [], isLoading } = useQuery<Project[]>({
-    queryKey: selectedTech ? ["/api/projects", selectedTech] : ["/api/projects"],
-    queryFn: selectedTech 
-      ? async () => {
-          const res = await fetch(`/api/projects?technology=${selectedTech}`);
-          if (!res.ok) throw new Error("Failed to fetch projects");
-          return res.json();
-        }
-      : undefined,
-  });
+  const filtered =
+    selectedTech
+      ? PROJECTS.filter((p) => p.technologies.includes(selectedTech))
+      : PROJECTS;
 
   const allTechnologies = Array.from(
-    new Set(projects.flatMap(p => p.technologies))
+    new Set(PROJECTS.flatMap((p) => p.technologies))
   ).sort();
 
   return (
@@ -40,7 +54,10 @@ export default function Projects() {
         </div>
 
         {allTechnologies.length > 0 && (
-          <div className="mb-8 flex flex-wrap gap-2 justify-center animate-slide-up" style={{ animationDelay: "100ms" }}>
+          <div
+            className="mb-8 flex flex-wrap gap-2 justify-center animate-slide-up"
+            style={{ animationDelay: "100ms" }}
+          >
             <Button
               size="sm"
               variant={selectedTech === null ? "default" : "outline"}
@@ -55,7 +72,7 @@ export default function Projects() {
                 size="sm"
                 variant={selectedTech === tech ? "default" : "outline"}
                 onClick={() => setSelectedTech(tech)}
-                data-testid={`filter-${tech.toLowerCase().replace(/\s+/g, '-')}`}
+                data-testid={`filter-${tech.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 {tech}
               </Button>
@@ -63,21 +80,7 @@ export default function Projects() {
           </div>
         )}
 
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Card key={i} className="animate-pulse">
-                <CardHeader>
-                  <div className="h-6 bg-muted rounded w-3/4 mb-2" />
-                  <div className="h-4 bg-muted rounded w-full" />
-                </CardHeader>
-                <CardContent>
-                  <div className="h-20 bg-muted rounded" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : projects.length === 0 ? (
+        {filtered.length === 0 ? (
           <div className="text-center py-12">
             <Code2 className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
             <p className="text-lg text-muted-foreground">
@@ -86,8 +89,8 @@ export default function Projects() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map((project, index) => (
-              <Card 
+            {filtered.map((project, index) => (
+              <Card
                 key={project.id}
                 className="hover-elevate overflow-visible flex flex-col animate-slide-up"
                 style={{ animationDelay: `${index * 50}ms` }}
@@ -99,14 +102,16 @@ export default function Projects() {
                       {project.title}
                     </CardTitle>
                     {project.featured && (
-                      <Badge variant="default" className="shrink-0">Featured</Badge>
+                      <Badge variant="default" className="shrink-0">
+                        Featured
+                      </Badge>
                     )}
                   </div>
                   <CardDescription data-testid={`project-description-${project.id}`}>
                     {project.description}
                   </CardDescription>
                 </CardHeader>
-                
+
                 <CardContent className="flex-1">
                   {project.longDescription && (
                     <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
@@ -115,9 +120,9 @@ export default function Projects() {
                   )}
                   <div className="flex flex-wrap gap-2">
                     {project.technologies.map((tech) => (
-                      <Badge 
-                        key={tech} 
-                        variant="secondary" 
+                      <Badge
+                        key={tech}
+                        variant="secondary"
                         className="text-xs"
                         data-testid={`tech-badge-${tech.toLowerCase()}`}
                       >

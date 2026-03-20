@@ -8,8 +8,8 @@ export async function connectMongo(): Promise<Db | null> {
   connectionAttempted = true;
 
   const uri = process.env.MONGODB_URI;
-  if (!uri || uri.includes("cluster.mongodb.net") && uri.includes("<") ) {
-    console.warn("[mongodb] No valid MONGODB_URI — using in-memory storage for contacts.");
+  if (!uri || uri.includes("<username>") || uri.includes("<password>")) {
+    console.warn("[mongodb] No valid MONGODB_URI set — using in-memory storage for contacts.");
     return null;
   }
 
