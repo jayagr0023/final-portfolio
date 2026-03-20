@@ -6,7 +6,7 @@ import { Navigation } from "@/components/Navigation";
 // Place your resume PDF in client/public/ and update the path below.
 // Example: if the file is client/public/resume.pdf, set RESUME_PDF = "/resume.pdf"
 // ─────────────────────────────────────────────────────────────────────────────
-const RESUME_PDF = "/resume.pdf";
+const RESUME_PDF = "/Jay_Agrawal_CV.pdf";
 
 export default function Resume() {
   return (

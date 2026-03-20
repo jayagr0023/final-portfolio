@@ -7,7 +7,7 @@ import { Link, useLocation } from "wouter";
 const navLinks = [
   { name: "Home", href: "/", isRoute: true },
   { name: "Projects", href: "/projects", isRoute: true },
-  { name: "Resume", href: "/resume", isRoute: true },
+  { name: "About", href: "/resume", isRoute: true },
   { name: "Skills", href: "#skills", isRoute: false },
   { name: "Contact", href: "#contact", isRoute: false },
 ];
