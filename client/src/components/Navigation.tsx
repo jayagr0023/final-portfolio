@@ -7,7 +7,7 @@ import { Link, useLocation } from "wouter";
 const navLinks = [
   { name: "Home", href: "/", isRoute: true },
   { name: "Projects", href: "/projects", isRoute: true },
-  { name: "About", href: "#about", isRoute: false },
+  { name: "Resume", href: "/resume", isRoute: true },
   { name: "Skills", href: "#skills", isRoute: false },
   { name: "Contact", href: "#contact", isRoute: false },
 ];
@@ -23,7 +23,7 @@ export function Navigation() {
       setIsScrolled(window.scrollY > 50);
 
       if (location === "/") {
-        const sections = ["home", "about", "skills", "contact"];
+        const sections = ["home", "skills", "contact"];
         const current = sections.find((section) => {
           const element = document.getElementById(section);
           if (element) {
