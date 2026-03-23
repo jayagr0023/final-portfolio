@@ -19,12 +19,9 @@ export interface Contact {
 export interface Project {
   id: string;
   title: string;
-  description: string;
   longDescription?: string | null;
   technologies: string[];
   imageUrl?: string | null;
   demoUrl?: string | null;
   githubUrl?: string | null;
-  featured: boolean;
-  createdAt: Date;
 }

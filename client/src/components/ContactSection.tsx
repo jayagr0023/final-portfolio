@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, Github, Linkedin, Twitter } from "lucide-react";
+import { Mail, Github, Linkedin } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -97,9 +97,7 @@ export function ContactSection() {
             data-testid="quote-contact"
           >
             "Communication is the key to success."
-            <footer className="text-sm font-normal mt-1 not-italic">
-              — Unknown
-            </footer>
+            
           </blockquote>
         </div>
 

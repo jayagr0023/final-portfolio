@@ -1,7 +1,7 @@
 import { Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ThemeToggle } from "@/components/ThemeToggle";
+// import { ThemeToggle } from "@/components/ThemeToggle";
 import { Link, useLocation } from "wouter";
 
 const navLinks = [
@@ -84,7 +84,7 @@ export function Navigation() {
             }}
             data-testid="link-logo"
           >
-            Portfolio
+            Agrawal Ji
           </a>
 
           <div className="hidden md:flex items-center gap-6">
@@ -131,11 +131,11 @@ export function Navigation() {
                 </a>
               )
             )}
-            <ThemeToggle />
+            {/* <ThemeToggle /> */}
           </div>
 
           <div className="flex items-center gap-2 md:hidden">
-            <ThemeToggle />
+            {/* <ThemeToggle /> */}
             <Button
               size="icon"
               variant="ghost"
