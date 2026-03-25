@@ -42,7 +42,7 @@ export function Navigation() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [location]);
 
-  const handleClick = (link: typeof navLinks[0]) => {
+  const handleClick = (link: (typeof navLinks)[0]) => {
     setIsMobileMenuOpen(false);
 
     if (!link.isRoute) {
@@ -55,7 +55,7 @@ export function Navigation() {
     }
   };
 
-  const isActive = (link: typeof navLinks[0]) => {
+  const isActive = (link: (typeof navLinks)[0]) => {
     if (link.isRoute) {
       return location === link.href;
     }
@@ -65,7 +65,9 @@ export function Navigation() {
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? "bg-background/80 backdrop-blur-md border-b border-border" : "bg-transparent"
+        isScrolled
+          ? "bg-background/80 backdrop-blur-md border-b border-border"
+          : "bg-transparent"
       }`}
       data-testid="nav-header"
     >
@@ -73,7 +75,7 @@ export function Navigation() {
         <div className="flex items-center justify-between h-16">
           <a
             href="/"
-            className="text-xl font-bold gradient-text"
+            className="text-xl lg:font-bold gradient-text"
             onClick={(e) => {
               e.preventDefault();
               if (location === "/") {
@@ -129,7 +131,24 @@ export function Navigation() {
                     }`}
                   />
                 </a>
-              )
+              ),
+            )}
+
+            {location === "/resume" && (
+              <div className="flex items-center gap-4 pl-2 border-l border-border">
+                <a
+                  href="#resume"
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Resume
+                </a>
+                <a
+                  href="#achievement"
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Achievement
+                </a>
+              </div>
             )}
             {/* <ThemeToggle /> */}
           </div>
@@ -143,7 +162,11 @@ export function Navigation() {
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               data-testid="button-menu-toggle"
             >
-              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {isMobileMenuOpen ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
             </Button>
           </div>
         </div>
@@ -184,7 +207,26 @@ export function Navigation() {
                 >
                   {link.name}
                 </a>
-              )
+              ),
+            )}
+
+            {location === "/resume" && (
+              <>
+                <a
+                  href="#resume"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block text-base font-medium transition-colors py-2 text-muted-foreground hover:text-foreground"
+                >
+                  Resume
+                </a>
+                <a
+                  href="#achievement"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block text-base font-medium transition-colors py-2 text-muted-foreground hover:text-foreground"
+                >
+                  Achievement
+                </a>
+              </>
             )}
           </div>
         </div>

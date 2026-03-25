@@ -1,6 +1,35 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { MongoClient, type Db } from "mongodb";
+import { config } from "dotenv";
+
+config();
+
+let db: Db | null = null;
+let connectionAttempted = false;
+
+export async function connectMongo(): Promise<Db | null> {
+  if (connectionAttempted) return db;
+  connectionAttempted = true;
+
+  const uri = process.env.MONGODB_URI;
+  if (!uri || uri.includes("<username>") || uri.includes("<password>")) {
+    console.warn("[mongodb] No valid MONGODB_URI set — using in-memory storage for contacts.");
+    return null;
+  }
+
+  try {
+    const client = new MongoClient(uri, { serverSelectionTimeoutMS: 5000 });
+    await client.connect();
+    db = client.db("portfolio");
+    console.log("[mongodb] Connected successfully.");
+    return db;
+  } catch (err: any) {
+    console.warn(`[mongodb] Connection failed (${err.message}) — using in-memory storage for contacts.`);
+    return null;
+  }
+}
 
 const app = express();
 
@@ -49,6 +78,9 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
+  // Initialize MongoDB connection on server start
+  await connectMongo();
+
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
@@ -76,5 +108,6 @@ app.use((req, res, next) => {
     host: "127.0.0.1",
   }, () => {
     log(`serving on port ${port}`);
+    log(`live on http://localhost:${port}`);
   });
 })();
