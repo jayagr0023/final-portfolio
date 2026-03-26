@@ -1,4 +1,4 @@
-import { Download, FileText } from "lucide-react";
+import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Navigation } from "@/components/Navigation";
@@ -86,35 +86,16 @@ type CodingStatsResponse = {
 
 export default function Resume() {
   const mobilePdfContainerRef = useRef<HTMLDivElement | null>(null);
-  const [previewImage, setPreviewImage] = useState<{
-    src: string;
-    title: string;
-  } | null>(null);
-  const [imageVersion] = useState(() => `${Date.now()}`);
   const [isMobileView, setIsMobileView] = useState(false);
   const [mobilePdfWidth, setMobilePdfWidth] = useState(360);
   const [mobilePdfPages, setMobilePdfPages] = useState(0);
   const [mobilePdfFailed, setMobilePdfFailed] = useState(false);
-  const [gfgImageStatus, setGfgImageStatus] = useState<
-    "loading" | "loaded" | "error"
-  >("loading");
 
   const { data: stats } = useQuery<CodingStatsResponse>({
     queryKey: ["/api/coding-stats"],
     staleTime: 1000 * 60 * 10,
     refetchInterval: 1000 * 60 * 10,
   });
-
-  useEffect(() => {
-    const handleEsc = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setPreviewImage(null);
-      }
-    };
-
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
-  }, []);
 
   useEffect(() => {
     const mobileQuery = window.matchMedia("(max-width: 768px)");
@@ -169,19 +150,6 @@ export default function Resume() {
         : "Problems Solved";
     }
     return "Problems Solved";
-  };
-
-  const leetcodeImageSrc = `/api/profile-image/leetcode?v=${imageVersion}`;
-  const gfgImageSrc = `/api/profile-image/gfg?v=${imageVersion}`;
-
-  const getAchievementImageSrc = (achievement: Achievement) => {
-    if (achievement.id === "1") {
-      return leetcodeImageSrc;
-    }
-    if (achievement.id === "2") {
-      return gfgImageSrc;
-    }
-    return null;
   };
 
   return (
@@ -310,56 +278,9 @@ export default function Resume() {
                       <h3 className="text-base lg:text-lg  font-semibold">
                         {achievement.title} - {getSolvedLabel(achievement.id)}
                       </h3>
-                      <span className="flex items-center gap-1 text-base lg:text-lg h-2/3 tracking-wider font-medium text-green-400 border border-green-400/30 bg-green-400/10 rounded-full px-2 py-0.5">
-                        <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                        Live
-                      </span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {achievement.id === "2" && gfgImageStatus === "loading" && (
-                      <div className="mb-2 rounded-md border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-red-200">
-                        Please wait... rendering live GFG profile image.
-                      </div>
-                    )}
-
-                    {getAchievementImageSrc(achievement) ? (
-                      <img
-                        src={getAchievementImageSrc(achievement) ?? undefined}
-                        alt={`${achievement.title} profile `}
-                        className="w-full h-60 object-cover rounded-md mb-3 cursor-zoom-in transition-transform duration-200 hover:scale-[1.01]"
-                        loading="lazy"
-                        onLoad={() => {
-                          if (achievement.id === "2") {
-                            setGfgImageStatus("loaded");
-                          }
-                        }}
-                        onError={() => {
-                          if (achievement.id === "2") {
-                            setGfgImageStatus("error");
-                          }
-                        }}
-                        onClick={() => {
-                          const src = getAchievementImageSrc(achievement);
-                          if (!src) return;
-                          setPreviewImage({
-                            src,
-                            title: `${achievement.title} Live Profile Preview`,
-                          });
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-60 rounded-md mb-3 border border-border bg-muted/30 flex items-center justify-center text-sm text-muted-foreground">
-                        Live profile image not available.
-                      </div>
-                    )}
-
-                    {achievement.id === "2" && gfgImageStatus === "error" && (
-                      <p className="mb-2 text-xs text-amber-300">
-                        Live GFG image is taking longer than expected. Please refresh after a few seconds.
-                      </p>
-                    )}
-
                     <p className="text-sm text-muted-foreground">
                       {achievement.description}
                     </p>
@@ -431,38 +352,6 @@ export default function Resume() {
         </div>
       </div>
 
-      {previewImage && (
-        <div
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm px-4 py-8 flex items-center justify-center"
-          onClick={() => setPreviewImage(null)}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Image preview dialog"
-        >
-          <div
-            className="relative max-w-6xl w-full flex flex-col items-center"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <button
-              type="button"
-              onClick={() => setPreviewImage(null)}
-              className="absolute -top-12 right-0 text-white/90 hover:text-white transition-colors text-sm border border-white/20 rounded-md px-3 py-1"
-            >
-              Close
-            </button>
-
-            <img
-              src={previewImage.src}
-              alt={previewImage.title}
-              className="w-full max-h-[82vh] object-contain rounded-lg shadow-2xl profile-preview-float"
-            />
-
-            <p className="text-white/80 text-sm mt-3 text-center">
-              {previewImage.title}
-            </p>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
