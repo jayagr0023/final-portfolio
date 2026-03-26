@@ -84,6 +84,9 @@ export default function Resume() {
     title: string;
   } | null>(null);
   const [imageVersion] = useState(() => `${Date.now()}`);
+  const [gfgImageStatus, setGfgImageStatus] = useState<
+    "loading" | "loaded" | "error"
+  >("loading");
 
   const { data: stats } = useQuery<CodingStatsResponse>({
     queryKey: ["/api/coding-stats"],
@@ -106,12 +109,12 @@ export default function Resume() {
     if (!stats) return "Loading...";
     if (id === "1") {
       return stats.leetcodeSolved != null
-        ? `${stats.leetcodeSolved} Problems Solved (updated)`
+        ? `${stats.leetcodeSolved} Problems Solved`
         : "Problems Solved";
     }
     if (id === "2") {
       return stats.gfgSolved != null
-        ? `${stats.gfgSolved} Problems Solved(updated)`
+        ? `${stats.gfgSolved} Problems Solved`
         : "Problems Solved";
     }
     return "Problems Solved";
@@ -210,19 +213,39 @@ export default function Resume() {
               {DSA.map((achievement) => (
                 <Card key={achievement.id} className="animate-slide-up">
                   <CardHeader>
-                    <CardTitle>
-                      <h3 className="text-lg font-semibold">
+                    <CardTitle className="flex justify-between">
+                      <h3 className="text-base lg:text-lg  font-semibold">
                         {achievement.title} - {getSolvedLabel(achievement.id)}
                       </h3>
+                      <span className="flex items-center gap-1 text-base lg:text-lg h-2/3 tracking-wider font-medium text-green-400 border border-green-400/30 bg-green-400/10 rounded-full px-2 py-0.5">
+                        <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                        Live
+                      </span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
+                    {achievement.id === "2" && gfgImageStatus === "loading" && (
+                      <div className="mb-2 rounded-md border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-red-200">
+                        Please wait... rendering live GFG profile image.
+                      </div>
+                    )}
+
                     {getAchievementImageSrc(achievement) ? (
                       <img
                         src={getAchievementImageSrc(achievement) ?? undefined}
                         alt={`${achievement.title} profile `}
                         className="w-full h-60 object-cover rounded-md mb-3 cursor-zoom-in transition-transform duration-200 hover:scale-[1.01]"
                         loading="lazy"
+                        onLoad={() => {
+                          if (achievement.id === "2") {
+                            setGfgImageStatus("loaded");
+                          }
+                        }}
+                        onError={() => {
+                          if (achievement.id === "2") {
+                            setGfgImageStatus("error");
+                          }
+                        }}
                         onClick={() => {
                           const src = getAchievementImageSrc(achievement);
                           if (!src) return;
@@ -237,6 +260,13 @@ export default function Resume() {
                         Live profile image not available.
                       </div>
                     )}
+
+                    {achievement.id === "2" && gfgImageStatus === "error" && (
+                      <p className="mb-2 text-xs text-amber-300">
+                        Live GFG image is taking longer than expected. Please refresh after a few seconds.
+                      </p>
+                    )}
+
                     <p className="text-sm text-muted-foreground">
                       {achievement.description}
                     </p>
@@ -245,9 +275,9 @@ export default function Resume() {
                     {achievement.link && (
                       <Button
                         asChild
-                        size="sm"
+                        size="lg"
                         variant="outline"
-                        className="mt-2"
+                        className="w-full"
                       >
                         <a
                           href={achievement.link}

@@ -39,6 +39,7 @@ const MAJOR: Project[] = [
       "HTML",
       "Tailwind CSS",
       "TypeScript",
+      "React",
       "Express",
       "MongoDB",
       "Node.js",
@@ -53,15 +54,15 @@ const MAJOR: Project[] = [
     id: "3",
     title: "Talkie",
     longDescription:
-      "NestEase is a full stack web platform for students and working professionals to find PG accommodations and meal services when relocating to a new city. Built with React, TypeScript, Node.js, Express, and MongoDB, it features three roles — user, provider, and superadmin — with JWT authentication. Users can browse, filter, and book verified listings. Providers manage their listings and incoming requests. Payments are processed via Razorpay. The platform includes location-based nearby suggestions between PGs and meal services, GSAP animations, and a fully responsive design.",
+      "Talkie is a real-time chat application built with React, TypeScript, Node.js, Express, and MongoDB. It features JWT authentication for secure user access, allowing users to create accounts and log in. The app supports one-on-one and group chats, with messages stored in MongoDB for persistence. Real-time communication is enabled through WebSockets, providing instant message delivery. The interface is designed with Tailwind CSS for a responsive and user-friendly experience.",
     technologies: [
       "HTML",
       "Tailwind CSS",
       "TypeScript",
+      "React",
       "Express",
       "MongoDB",
       "Node.js",
-      "Cloudinary",
       "JWT Authentication",
       "GSAP Animations",
     ],
@@ -128,10 +129,13 @@ export default function Projects() {
             {MAJOR.map((project, index) => (
               <Card
                 key={project.id}
-                className="hover-elevate overflow-visible flex flex-col animate-slide-up"
+                className={
+                  project.demoUrl != null
+                    ? " hover-elevate overflow-visible flex flex-col animate-slide-up"
+                    : "pointer-events-none opacity-70"
+                }
                 style={{
                   animationDelay: `${index * 50}ms`,
-                  opacity: project.demoUrl == null ? "0.5" : "1",
                 }}
                 data-testid={`project-card-${project.id}`}
               >
