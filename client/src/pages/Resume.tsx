@@ -1,4 +1,4 @@
-import { Download } from "lucide-react";
+import { Download, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Navigation } from "@/components/Navigation";
@@ -9,7 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { Achievement, certificate } from "@shared/schema";
 import { Document, Page, pdfjs } from "react-pdf";
@@ -24,19 +23,19 @@ const RESUME_PDF = "/Jay_Agrawal_CV.pdf";
 const DSA: Achievement[] = [
   {
     id: "1",
-    title: "LeetCode",
+    title: "LeetCode - 170 problems solved",
     description:
       "Demonstrated strong problem-solving skills by solving coding problems on LeetCode, covering a wide range of topics including arrays, linked lists, trees, graphs, dynamic programming, and more.",
     link: "https://leetcode.com/u/AgJi232427/",
-    img: "1leetcode.png",
+    img: "LC.png",
   },
   {
     id: "2",
-    title: "GFG",
+    title: "GFG - 57 problems solved",
     description:
       "Solved GeeksforGeeks problems also to strengthen core data structures and algorithms fundamentals, with focused practice across arrays, linked lists, trees, graphs, recursion, and dynamic programming.",
     link: "https://www.geeksforgeeks.org/profile/2802jayagji/?tab=activity",
-    img: "2gfg.png",
+    img: "GFG.png",
   },
 ];
 
@@ -78,24 +77,27 @@ const CERTIFICATES: certificate[] = [
   },
 ];
 
-type CodingStatsResponse = {
-  leetcodeSolved: number | null;
-  gfgSolved: number | null;
-  updatedAt: string;
-};
-
 export default function Resume() {
   const mobilePdfContainerRef = useRef<HTMLDivElement | null>(null);
+  const [previewImage, setPreviewImage] = useState<{
+    src: string;
+    title: string;
+  } | null>(null);
   const [isMobileView, setIsMobileView] = useState(false);
   const [mobilePdfWidth, setMobilePdfWidth] = useState(360);
   const [mobilePdfPages, setMobilePdfPages] = useState(0);
   const [mobilePdfFailed, setMobilePdfFailed] = useState(false);
 
-  const { data: stats } = useQuery<CodingStatsResponse>({
-    queryKey: ["/api/coding-stats"],
-    staleTime: 1000 * 60 * 10,
-    refetchInterval: 1000 * 60 * 10,
-  });
+  useEffect(() => {
+    const handleEsc = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setPreviewImage(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, []);
 
   useEffect(() => {
     const mobileQuery = window.matchMedia("(max-width: 768px)");
@@ -137,21 +139,6 @@ export default function Resume() {
     };
   }, [isMobileView]);
 
-  const getSolvedLabel = (id: string) => {
-    if (!stats) return "Problems Solved";
-    if (id === "1") {
-      return stats.leetcodeSolved != null
-        ? `${stats.leetcodeSolved} Problems Solved`
-        : "Problems Solved";
-    }
-    if (id === "2") {
-      return stats.gfgSolved != null
-        ? `${stats.gfgSolved} Problems Solved`
-        : "Problems Solved";
-    }
-    return "Problems Solved";
-  };
-
   return (
     <div className="min-h-screen">
       <Navigation />
@@ -184,7 +171,10 @@ export default function Resume() {
           style={{ animationDelay: "150ms" }}
         >
           {isMobileView ? (
-            <div ref={mobilePdfContainerRef} className="w-full p-2 bg-background">
+            <div
+              ref={mobilePdfContainerRef}
+              className="w-full p-2 bg-background"
+            >
               {!mobilePdfFailed ? (
                 <Document
                   file={RESUME_PDF}
@@ -231,7 +221,11 @@ export default function Resume() {
 
               <div className="pt-2">
                 <Button asChild className="w-full" variant="secondary">
-                  <a href={RESUME_PDF} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={RESUME_PDF}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     Open PDF
                   </a>
                 </Button>
@@ -275,12 +269,24 @@ export default function Resume() {
                 <Card key={achievement.id} className="animate-slide-up">
                   <CardHeader>
                     <CardTitle className="flex justify-between">
-                      <h3 className="text-base lg:text-lg  font-semibold">
-                        {achievement.title} - {getSolvedLabel(achievement.id)}
+                      <h3 className="text-base lg:text-lg font-semibold">
+                        {achievement.title}
                       </h3>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
+                    <img
+                      src={achievement.img}
+                      alt={`${achievement.title} profile`}
+                      className="w-full h-60 object-cover rounded-md mb-3 cursor-zoom-in transition-transform duration-200 hover:scale-[1.01]"
+                      loading="lazy"
+                      onClick={() => {
+                        setPreviewImage({
+                          src: achievement.img,
+                          title: `${achievement.title} Profile Preview`,
+                        });
+                      }}
+                    />
                     <p className="text-sm text-muted-foreground">
                       {achievement.description}
                     </p>
@@ -352,6 +358,38 @@ export default function Resume() {
         </div>
       </div>
 
+      {previewImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm px-4 py-8 flex items-center justify-center"
+          onClick={() => setPreviewImage(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Image preview dialog"
+        >
+          <div
+            className="relative max-w-6xl w-full flex flex-col items-center"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setPreviewImage(null)}
+              className="absolute -top-12 right-0 text-white/90 hover:text-white transition-colors text-sm border border-white/20 rounded-md px-3 py-1"
+            >
+              Close
+            </button>
+
+            <img
+              src={previewImage.src}
+              alt={previewImage.title}
+              className="w-full max-h-[82vh] object-contain rounded-lg shadow-2xl profile-preview-float"
+            />
+
+            <p className="text-white/80 text-sm mt-3 text-center">
+              {previewImage.title}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
