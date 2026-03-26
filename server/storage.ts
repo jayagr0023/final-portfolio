@@ -1,5 +1,5 @@
 import { type InsertContact, type Contact } from "@shared/schema";
-import { connectMongo } from "./index";
+import { connectMongo } from "./db";
 import { randomUUID } from "crypto";
 import { Db } from "mongodb";
 

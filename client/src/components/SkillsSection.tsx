@@ -6,7 +6,7 @@ const skills = [
     icon: Code2,
     title: "Frontend Development",
     color: "from-blue-500 to-cyan-500",
-    items: ["React", "TypeScript", "Next.js", "Tailwind CSS", "HTML5", "CSS3"],
+    items: ["React", "Tailwind CSS", "HTML5", "CSS3"],
   },
   {
     icon: Database,
@@ -26,13 +26,13 @@ const skills = [
     icon: Zap,
     title: "Tools & Workflow",
     color: "from-indigo-500 to-violet-500",
-    items: ["Git/GitHub", "Docker", "CI/CD", "Vercel", "Render"],
+    items: ["Git/GitHub", "Docker", "Vercel", "Render"],
   },
   {
     icon: Brain,
     title: "Programming Languages",
     color: "from-yellow-500 to-orange-500",
-    items: ["C", "C++", "Java", "Algorithms"],
+    items: ["C", "C++", "Java", "TypeScript", "JavaScript"],
   },
 ];
 
