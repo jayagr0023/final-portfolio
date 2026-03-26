@@ -2,18 +2,51 @@ import type { Express } from "express";
 import { storage } from "./storage";
 import { insertContactSchema } from "@shared/schema";
 
-async function fetchLeetCodeSolved(username: string): Promise<number | null> {
+type LeetCodeStats = {
+  all: number | null;
+  easy: number | null;
+  medium: number | null;
+  hard: number | null;
+};
+
+type ProxiedImage = {
+  contentType: string;
+  buffer: Buffer;
+};
+
+async function fetchWithTimeout(
+  url: string,
+  options: RequestInit,
+  timeoutMs = 6000,
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function fetchLeetCodeStats(
+  username: string,
+  timeoutMs = 7000,
+): Promise<LeetCodeStats | null> {
   const body = {
     query:
       "query userProfile($username: String!) { matchedUser(username: $username) { submitStatsGlobal { acSubmissionNum { difficulty count submissions } } } }",
     variables: { username },
   };
 
-  const response = await fetch("https://leetcode.com/graphql/", {
+  const response = await fetchWithTimeout("https://leetcode.com/graphql/", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
-  });
+  }, timeoutMs);
 
   if (!response.ok) {
     return null;
@@ -27,11 +60,31 @@ async function fetchLeetCodeSolved(username: string): Promise<number | null> {
     return null;
   }
 
-  const allRow = rows.find((item) => item?.difficulty === "All");
-  return typeof allRow?.count === "number" ? allRow.count : null;
+  const getCount = (difficulty: string) => {
+    const row = rows.find((item) => item?.difficulty === difficulty);
+    return typeof row?.count === "number" ? row.count : null;
+  };
+
+  return {
+    all: getCount("All"),
+    easy: getCount("Easy"),
+    medium: getCount("Medium"),
+    hard: getCount("Hard"),
+  };
 }
 
-async function fetchGfgSolved(profileHandle: string): Promise<number | null> {
+async function fetchLeetCodeSolved(
+  username: string,
+  timeoutMs = 7000,
+): Promise<number | null> {
+  const stats = await fetchLeetCodeStats(username, timeoutMs);
+  return stats?.all ?? null;
+}
+
+async function fetchGfgSolved(
+  profileHandle: string,
+  timeoutMs = 7000,
+): Promise<number | null> {
   const urls = [
     `https://www.geeksforgeeks.org/profile/${profileHandle}?tab=activity`,
     `https://www.geeksforgeeks.org/profile/${profileHandle}`,
@@ -55,12 +108,12 @@ async function fetchGfgSolved(profileHandle: string): Promise<number | null> {
 
   for (const url of urls) {
     try {
-      const response = await fetch(url, {
+      const response = await fetchWithTimeout(url, {
         headers: {
           "User-Agent": "Mozilla/5.0",
           Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         },
-      });
+      }, timeoutMs);
 
       if (!response.ok) continue;
 
@@ -82,11 +135,11 @@ async function fetchLeetCodeProfileImage(username: string): Promise<string | nul
     variables: { username },
   };
 
-  const response = await fetch("https://leetcode.com/graphql/", {
+  const response = await fetchWithTimeout("https://leetcode.com/graphql/", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
-  });
+  }, 7000);
 
   if (!response.ok) return null;
 
@@ -96,12 +149,12 @@ async function fetchLeetCodeProfileImage(username: string): Promise<string | nul
 }
 
 async function fetchGfgProfileImage(profileHandle: string): Promise<string | null> {
-  const response = await fetch(`https://www.geeksforgeeks.org/profile/${profileHandle}`, {
+  const response = await fetchWithTimeout(`https://www.geeksforgeeks.org/profile/${profileHandle}`, {
     headers: {
       "User-Agent": "Mozilla/5.0",
       Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     },
-  });
+  }, 7000);
 
   if (!response.ok) return null;
 
@@ -151,37 +204,104 @@ function getScreenshotCandidates(platform: "leetcode" | "gfg", cacheBust?: strin
   ];
 }
 
-function createGfgHeatmapSvg(solved: number | null): string {
-  const safeSolved = typeof solved === "number" && Number.isFinite(solved) ? solved : 0;
-  const cols = 18;
-  const rows = 6;
-  const total = cols * rows;
-  const seed = safeSolved || 37;
-  const levels = ["#1d3a2b", "#1f6f43", "#24a35a", "#6fdc91"];
+async function fetchImageCandidate(url: string, timeoutMs = 4500): Promise<ProxiedImage> {
+  const imageResponse = await fetchWithTimeout(url, {
+    headers: {
+      "User-Agent": "Mozilla/5.0",
+      Accept: "image/*,*/*;q=0.8",
+    },
+  }, timeoutMs);
 
-  const cells: string[] = [];
-  for (let i = 0; i < total; i++) {
-    const x = 30 + (i % cols) * 24;
-    const y = 110 + Math.floor(i / cols) * 24;
-    const v = (seed * (i + 11) + i * 13) % 100;
-    const color = v > 75 ? levels[3] : v > 50 ? levels[2] : v > 25 ? levels[1] : levels[0];
-    cells.push(`<rect x="${x}" y="${y}" width="16" height="16" rx="3" fill="${color}"/>`);
+  if (!imageResponse.ok) {
+    throw new Error(`Candidate request failed: ${imageResponse.status}`);
   }
+
+  const contentType = imageResponse.headers.get("content-type") || "";
+  if (!contentType.toLowerCase().startsWith("image/")) {
+    throw new Error("Candidate is not an image response");
+  }
+
+  const rawBuffer = Buffer.from(await imageResponse.arrayBuffer());
+  const lowerUrl = url.toLowerCase();
+  const lowerContentType = contentType.toLowerCase();
+
+  // WordPress mShots sometimes returns a temporary "Generating Preview" GIF.
+  // Treat it as a miss so we can continue to a real image or fallback card.
+  if (lowerUrl.includes("s.wordpress.com/mshots") && lowerContentType.includes("image/gif")) {
+    const asciiPreview = rawBuffer.toString("latin1");
+    if (asciiPreview.includes("Generating Preview") || rawBuffer.length < 15000) {
+      throw new Error("Preview placeholder image");
+    }
+  }
+
+  let buffer = rawBuffer;
+
+  // Some SVG card providers ship with an initial opacity:0 style that stays hidden in <img>.
+  if (contentType.toLowerCase().includes("image/svg+xml")) {
+    const svg = rawBuffer
+      .toString("utf-8")
+      .replace("svg{opacity:0}", "svg{opacity:1}");
+    buffer = Buffer.from(svg, "utf-8");
+  }
+
+  if (buffer.length === 0) {
+    throw new Error("Empty image buffer");
+  }
+
+  return {
+    contentType,
+    buffer,
+  };
+}
+
+async function fetchFirstValidImage(candidates: string[]): Promise<ProxiedImage | null> {
+  if (candidates.length === 0) return null;
+
+  try {
+    return await Promise.any(
+      candidates.map((candidateUrl) => fetchImageCandidate(candidateUrl)),
+    );
+  } catch {
+    return null;
+  }
+}
+
+function createLeetCodeFallbackSvg(stats: LeetCodeStats | null): string {
+  const safeSolved = stats?.all ?? 0;
+  const easy = stats?.easy ?? 0;
+  const medium = stats?.medium ?? 0;
+  const hard = stats?.hard ?? 0;
+  const targetSolved = 3500;
+  const progress = Math.max(0, Math.min(100, Math.round((safeSolved / targetSolved) * 100)));
+  const progressWidth = Math.round((progress / 100) * 438);
 
   return `
 <svg width="500" height="320" viewBox="0 0 500 320" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#0b1f14"/>
-      <stop offset="100%" stop-color="#102a1e"/>
+    <linearGradient id="lcBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1b1d2a"/>
+      <stop offset="100%" stop-color="#111318"/>
     </linearGradient>
   </defs>
-  <rect x="0" y="0" width="500" height="320" rx="18" fill="url(#bg)"/>
-  <text x="30" y="48" fill="#d7ffe7" font-size="24" font-family="Poppins, Arial, sans-serif" font-weight="700">GFG Profile Overview</text>
-  <text x="30" y="78" fill="#9bd4b1" font-size="16" font-family="Poppins, Arial, sans-serif">Heatmap-style fallback card</text>
-  <text x="470" y="48" text-anchor="end" fill="#ffffff" font-size="32" font-family="Poppins, Arial, sans-serif" font-weight="700">${safeSolved}</text>
-  <text x="470" y="70" text-anchor="end" fill="#9bd4b1" font-size="14" font-family="Poppins, Arial, sans-serif">Problems Solved</text>
-  ${cells.join("")}
+  <rect x="0" y="0" width="500" height="320" rx="18" fill="url(#lcBg)"/>
+  <text x="30" y="48" fill="#f3f5ff" font-size="24" font-family="Poppins, Arial, sans-serif" font-weight="700">LeetCode Profile Overview</text>
+  <text x="30" y="78" fill="#b9bfd3" font-size="16" font-family="Poppins, Arial, sans-serif">Solved, difficulty split and progress fallback card</text>
+  <rect x="30" y="90" width="438" height="10" rx="5" fill="#2a2d3d"/>
+  <rect x="30" y="90" width="${progressWidth}" height="10" rx="5" fill="#ffa116"/>
+  <text x="470" y="98" text-anchor="end" fill="#c9cfdf" font-size="12" font-family="Poppins, Arial, sans-serif">${progress}% target progress</text>
+  <circle cx="90" cy="180" r="42" fill="#ffa116" opacity="0.95"/>
+  <path d="M72 180l22-22 10 10-12 12 12 12-10 10-22-22z" fill="#1a1a1a"/>
+  <text x="470" y="168" text-anchor="end" fill="#ffffff" font-size="42" font-family="Poppins, Arial, sans-serif" font-weight="700">${safeSolved}</text>
+  <text x="470" y="192" text-anchor="end" fill="#b9bfd3" font-size="14" font-family="Poppins, Arial, sans-serif">Problems Solved (${targetSolved} target)</text>
+  <rect x="190" y="220" width="86" height="34" rx="8" fill="#1f3a2a"/>
+  <rect x="285" y="220" width="86" height="34" rx="8" fill="#3a341f"/>
+  <rect x="380" y="220" width="86" height="34" rx="8" fill="#3a2020"/>
+  <text x="233" y="234" text-anchor="middle" fill="#8fe6b5" font-size="11" font-family="Poppins, Arial, sans-serif">EASY</text>
+  <text x="328" y="234" text-anchor="middle" fill="#f3d98f" font-size="11" font-family="Poppins, Arial, sans-serif">MED</text>
+  <text x="423" y="234" text-anchor="middle" fill="#f0a4a4" font-size="11" font-family="Poppins, Arial, sans-serif">HARD</text>
+  <text x="233" y="248" text-anchor="middle" fill="#ffffff" font-size="15" font-family="Poppins, Arial, sans-serif" font-weight="700">${easy}</text>
+  <text x="328" y="248" text-anchor="middle" fill="#ffffff" font-size="15" font-family="Poppins, Arial, sans-serif" font-weight="700">${medium}</text>
+  <text x="423" y="248" text-anchor="middle" fill="#ffffff" font-size="15" font-family="Poppins, Arial, sans-serif" font-weight="700">${hard}</text>
 </svg>`;
 }
 
@@ -227,10 +347,16 @@ export function registerRoutes(app: Express): void {
 
   app.get("/api/coding-stats", async (_req, res) => {
     try {
-      const [leetcodeSolved, gfgSolved] = await Promise.all([
-        fetchLeetCodeSolved("AgJi232427"),
+      const [leetcodeResult, gfgResult] = await Promise.allSettled([
+        fetchLeetCodeStats("AgJi232427"),
         fetchGfgSolved("2802jayagji"),
       ]);
+
+      const leetcodeSolved =
+        leetcodeResult.status === "fulfilled"
+          ? (leetcodeResult.value?.all ?? null)
+          : null;
+      const gfgSolved = gfgResult.status === "fulfilled" ? gfgResult.value : null;
 
       res.json({
         leetcodeSolved,
@@ -277,52 +403,43 @@ export function registerRoutes(app: Express): void {
     }
 
     try {
-      const candidates = getScreenshotCandidates(platform, cacheBust);
+      const screenshotCandidates = getScreenshotCandidates(platform, cacheBust);
+      const candidates = screenshotCandidates;
 
-      for (const imageUrl of candidates) {
-        const imageResponse = await fetch(imageUrl, {
-          headers: {
-            "User-Agent": "Mozilla/5.0",
-            Accept: "image/*,*/*;q=0.8",
-          },
-        });
-
-        if (!imageResponse.ok) {
-          continue;
-        }
-
-        const contentType = imageResponse.headers.get("content-type") || "";
-        if (!contentType.toLowerCase().startsWith("image/")) {
-          continue;
-        }
-
-        const rawBuffer = Buffer.from(await imageResponse.arrayBuffer());
-        let buffer = rawBuffer;
-
-        // Some SVG card providers ship with an initial opacity:0 style that stays hidden in <img>.
-        if (contentType.toLowerCase().includes("image/svg+xml")) {
-          const svg = rawBuffer
-            .toString("utf-8")
-            .replace("svg{opacity:0}", "svg{opacity:1}");
-          buffer = Buffer.from(svg, "utf-8");
-        }
-
-        if (buffer.length === 0) {
-          continue;
-        }
-
-        res.setHeader("Content-Type", contentType);
-        // URLs are versioned with ?v=... from the client, so per-version caching is safe.
-        res.setHeader("Cache-Control", "public, max-age=86400, immutable");
-        res.send(buffer);
+      const bestImage = await fetchFirstValidImage(candidates);
+      if (bestImage) {
+        res.setHeader("Content-Type", bestImage.contentType);
+        // Keep cache short to avoid stale provider placeholders on serverless edge caches.
+        res.setHeader(
+          "Cache-Control",
+          "public, max-age=120, s-maxage=120, stale-while-revalidate=300",
+        );
+        res.send(bestImage.buffer);
         return;
       }
 
+      const [leetcodeStatsResult, gfgSolvedResult] = await Promise.allSettled([
+        fetchLeetCodeStats("AgJi232427", 2500),
+        fetchGfgSolved("2802jayagji", 2500),
+      ]);
+
+      const leetcodeStats =
+        leetcodeStatsResult.status === "fulfilled" ? leetcodeStatsResult.value : null;
+      const gfgSolved = gfgSolvedResult.status === "fulfilled" ? gfgSolvedResult.value : null;
+
       if (platform === "gfg") {
-        const solved = await fetchGfgSolved("2802jayagji");
-        const svg = createGfgHeatmapSvg(solved);
+        // Do not serve synthetic heatmap cards for GFG. Let the client show retry/error UI.
+        res.status(502).json({ error: "Unable to render GFG profile image from providers" });
+        return;
+      }
+
+      if (platform === "leetcode") {
+        const svg = createLeetCodeFallbackSvg(leetcodeStats);
         res.setHeader("Content-Type", "image/svg+xml; charset=utf-8");
-        res.setHeader("Cache-Control", "public, max-age=86400, immutable");
+        res.setHeader(
+          "Cache-Control",
+          "public, max-age=120, s-maxage=120, stale-while-revalidate=300",
+        );
         res.send(svg);
         return;
       }

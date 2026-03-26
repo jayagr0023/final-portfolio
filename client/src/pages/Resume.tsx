@@ -157,7 +157,7 @@ export default function Resume() {
   }, [isMobileView]);
 
   const getSolvedLabel = (id: string) => {
-    if (!stats) return "Loading...";
+    if (!stats) return "Problems Solved";
     if (id === "1") {
       return stats.leetcodeSolved != null
         ? `${stats.leetcodeSolved} Problems Solved`
