@@ -10,8 +10,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Achievement, certificate } from "@shared/schema";
+import { Document, Page, pdfjs } from "react-pdf";
+
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.mjs",
+  import.meta.url,
+).toString();
 
 const RESUME_PDF = "/Jay_Agrawal_CV.pdf";
 
@@ -79,11 +85,16 @@ type CodingStatsResponse = {
 };
 
 export default function Resume() {
+  const mobilePdfContainerRef = useRef<HTMLDivElement | null>(null);
   const [previewImage, setPreviewImage] = useState<{
     src: string;
     title: string;
   } | null>(null);
   const [imageVersion] = useState(() => `${Date.now()}`);
+  const [isMobileView, setIsMobileView] = useState(false);
+  const [mobilePdfWidth, setMobilePdfWidth] = useState(360);
+  const [mobilePdfPages, setMobilePdfPages] = useState(0);
+  const [mobilePdfFailed, setMobilePdfFailed] = useState(false);
   const [gfgImageStatus, setGfgImageStatus] = useState<
     "loading" | "loaded" | "error"
   >("loading");
@@ -104,6 +115,46 @@ export default function Resume() {
     window.addEventListener("keydown", handleEsc);
     return () => window.removeEventListener("keydown", handleEsc);
   }, []);
+
+  useEffect(() => {
+    const mobileQuery = window.matchMedia("(max-width: 768px)");
+    const updateMobileView = () => setIsMobileView(mobileQuery.matches);
+
+    updateMobileView();
+
+    if (typeof mobileQuery.addEventListener === "function") {
+      mobileQuery.addEventListener("change", updateMobileView);
+    } else {
+      mobileQuery.addListener(updateMobileView);
+    }
+
+    return () => {
+      if (typeof mobileQuery.removeEventListener === "function") {
+        mobileQuery.removeEventListener("change", updateMobileView);
+      } else {
+        mobileQuery.removeListener(updateMobileView);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isMobileView || !mobilePdfContainerRef.current) return;
+
+    const updateWidth = () => {
+      if (!mobilePdfContainerRef.current) return;
+      const containerWidth = mobilePdfContainerRef.current.clientWidth;
+      setMobilePdfWidth(Math.max(280, containerWidth - 16));
+    };
+
+    updateWidth();
+
+    const resizeObserver = new ResizeObserver(updateWidth);
+    resizeObserver.observe(mobilePdfContainerRef.current);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [isMobileView]);
 
   const getSolvedLabel = (id: string) => {
     if (!stats) return "Loading...";
@@ -159,31 +210,73 @@ export default function Resume() {
             </a>
           </Button>
         </div>
-        <div
-          className="text-center mb-6 text-sm text-muted-foreground animate-slide-up"
-          style={{ animationDelay: "200ms" }}
-        >
-          <FileText className="inline h-4 w-4 mr-1 align-middle" />
-          If the PDF does not display, use this{" "}
-          <a
-            href={RESUME_PDF}
-            download
-            className="underline text-primary hover:text-primary/80 transition-colors"
-          >
-            download link
-          </a>{" "}
-        </div>
 
         <div
           className="animate-slide-up rounded-xl overflow-hidden border border-border shadow-2xl"
           style={{ animationDelay: "150ms" }}
         >
-          <iframe
-            src={RESUME_PDF}
-            title="Resume"
-            className="w-full"
-            style={{ height: "80vh", minHeight: "600px" }}
-          />
+          {isMobileView ? (
+            <div ref={mobilePdfContainerRef} className="w-full p-2 bg-background">
+              {!mobilePdfFailed ? (
+                <Document
+                  file={RESUME_PDF}
+                  onLoadSuccess={({ numPages }) => {
+                    setMobilePdfPages(numPages);
+                    setMobilePdfFailed(false);
+                  }}
+                  onLoadError={() => setMobilePdfFailed(true)}
+                  loading={
+                    <div className="py-10 text-center text-sm text-muted-foreground">
+                      Loading mobile PDF preview...
+                    </div>
+                  }
+                  error={
+                    <div className="py-10 px-4 text-center text-sm text-muted-foreground">
+                      Mobile preview could not be loaded on this browser.
+                    </div>
+                  }
+                >
+                  {Array.from({ length: mobilePdfPages }, (_, index) => (
+                    <Page
+                      key={index + 1}
+                      pageNumber={index + 1}
+                      width={mobilePdfWidth}
+                      renderTextLayer={false}
+                      renderAnnotationLayer={false}
+                      className="mx-auto mb-3 border border-border rounded-md overflow-hidden"
+                    />
+                  ))}
+                </Document>
+              ) : (
+                <div className="space-y-3">
+                  <div className="py-3 px-4 text-center text-sm text-muted-foreground border border-border rounded-md">
+                    Inline mobile preview is unavailable on this device/browser.
+                  </div>
+                  <iframe
+                    src={RESUME_PDF}
+                    title="Resume mobile fallback"
+                    className="w-full rounded-md border border-border"
+                    style={{ height: "70vh", minHeight: "420px" }}
+                  />
+                </div>
+              )}
+
+              <div className="pt-2">
+                <Button asChild className="w-full" variant="secondary">
+                  <a href={RESUME_PDF} target="_blank" rel="noopener noreferrer">
+                    Open PDF
+                  </a>
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <iframe
+              src={RESUME_PDF}
+              title="Resume"
+              className="w-full"
+              style={{ height: "80vh", minHeight: "600px" }}
+            />
+          )}
         </div>
       </div>
       <div
