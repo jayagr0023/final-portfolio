@@ -262,7 +262,7 @@ export default function Projects() {
           <div className="heading  mb-4 text-center sm:text-left">
             <h2 className=" text-center sm:text-left text-2xl sm:text-xl lg:text-3xl font-normal lg:inline">
               {" "}
-              <span className="bg-gradient-to-r from-primary/30 to-accent/30">
+              <span className="bg-linear-to-r from-primary/30 to-accent/30">
                 {" "}
                 Minor
               </span>{" "}
