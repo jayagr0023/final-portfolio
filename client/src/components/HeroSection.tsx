@@ -58,8 +58,8 @@ export function HeroSection() {
             data-testid="hero-illustration"
           >
             <div className="relative col-start-1  z-10 w-full max-w-md aspect-square flex items-center justify-center">
-              <div className="absolute  inset-0 bg-gradient-to-br from-primary/20 via-accent/20 to-primary/20 rounded-full blur-3xl animate-pulse-slow" />
-              <div className="relative w-64 h-64 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center shadow-2xl">
+              <div className="absolute  inset-0 bg-linear-to-br from-primary/20 via-accent/20 to-primary/20 rounded-full blur-3xl animate-pulse-slow" />
+              <div className="relative w-64 h-64 bg-linear-to-br from-primary to-accent rounded-full flex items-center justify-center shadow-2xl">
                 <div className=" w-56 h-56 bg-background rounded-full flex items-center justify-center border-4 border-primary/30">
                   <img
                     src="jay.png"
@@ -79,36 +79,23 @@ export function HeroSection() {
                 Hello! I Am <span className="text-accent">Jay Agrawal</span>
               </p>
               <h1
-                className="text-4xl inline md:text-5xl lg:text-6xl font-bold leading-tight"
+                className="text-base inline md:text-lg lg:text-xl leading-tight"
                 data-testid="text-hero-title"
               >
-                A Developer who &nbsp;
+                Motivated{" "}
+                <span className="gradient-text font-bold">
+                  Full Stack / MERN Developer
+                </span>{" "}
+                and coding enthusiast with strong foundations in Data Structures
+                & Algorithms{" "}
+                <span className="gradient-text font-bold"> (DSA) </span> and
+                problem solving. Experienced in building scalable,responsive web
+                applications using MongoDB, Express.js, React.js, Node.js, and
+                modern frontend technologies. Passionate about writing clean,
+                efficient code, solving complex problems, and continuously
+                improving technical skills to build real-world software
+                solutions
               </h1>
-              <h2
-                className="text-4xl inline md:text-5xl lg:text-6xl  font-bold"
-                data-testid="text-hook"
-              >
-                judges a book &nbsp;
-              </h2>
-              {/* </div> */}
-              {/* <div className="flex items-baseline gap-3"> */}
-              <h2 className="text-3xl inline md:text-4xl lg:text-5xl font-bold">
-                by its &nbsp;
-              </h2>
-              <span
-                className="text-3xl md:text-4xl lg:text-5xl font-bold gradient-text"
-                data-testid="text-cover"
-              >
-                 cover
-              </span>
-              <span className="text-accent text-4xl">.</span>
-              {/* </div> */}
-              <p
-                className="text-muted-foreground text-sm lg:text-base italic mt-2"
-                data-testid="text-subtitle"
-              >
-                Because the cover does not impress you, what else can?
-              </p>
             </div>
 
             <div className="space-y-3">
