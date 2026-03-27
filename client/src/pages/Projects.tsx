@@ -123,14 +123,14 @@ export default function Projects() {
       <Navigation />
       <div className="major max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
         <div className="text-center mb-12 animate-slide-up">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 bg-gradient-to-r from-primary via-purple-500 to-accent bg-clip-text text-transparent">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 bg-linear-to-r from-primary via-purple-500 to-accent bg-clip-text text-transparent">
             My Projects
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-4">
             Explore my portfolio of web applications, tools, and creative
             projects
           </p>
-          <p className="italic text-sm text-muted-foreground/60 bg-gradient-to-r from-primary/30 to-accent/30 bg-clip-text ">
+          <p className="italic text-sm text-muted-foreground/60 bg-linear-to-r from-primary/30 to-accent/30 bg-clip-text ">
             "Innovation distinguishes between a leader and a follower."
           </p>
         </div>
@@ -138,7 +138,7 @@ export default function Projects() {
           <div className="heading mb-4 text-center sm:text-left ">
             <h2 className=" text-2xl sm:text-xl lg:text-3xl font-normal mb-4 inline">
               {" "}
-              <span className="bg-gradient-to-r from-primary/30 to-accent/30">
+              <span className="bg-linear-to-r from-primary/30 to-accent/30">
                 {" "}
                 Major
               </span>{" "}
