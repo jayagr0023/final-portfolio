@@ -114,6 +114,10 @@ keyframes: {
           "0%, 100%": { backgroundPosition: "0% 50%" },
           "50%": { backgroundPosition: "100% 50%" },
         },
+        "pop-up-from-back": {
+          "0%": { transform: "translateY(80px)", opacity: "0", zIndex: "0" },
+          "100%": { transform: "translateY(0)", opacity: "1", zIndex: "20" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -122,6 +126,7 @@ keyframes: {
         "pulse-slow": "pulse-slow 3s ease-in-out infinite",
         "slide-up": "slide-up 0.6s ease-out",
         "gradient": "gradient 8s linear infinite",
+        "pop-up-from-back": "pop-up-from-back 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
       },
     },
   },
