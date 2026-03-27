@@ -103,7 +103,7 @@ const MINOR: Project[] = [
     technologies: ["HTML", "CSS", "JavaScript"],
     demoUrl: "https://techie-agrawalji.github.io/MY_Portfolio/",
     githubUrl: "https://github.com/Techie-AgrawalJi/MY_Portfolio",
-    imageUrl: "Portfolio.png",
+    imageUrl: "portfolio.png",
   },
   {
     id: "4",
