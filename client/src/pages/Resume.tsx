@@ -166,7 +166,7 @@ export default function Resume() {
         id="resume"
       >
         <div className="text-center mb-5 animate-slide-up">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 bg-gradient-to-r from-primary via-purple-500 to-accent bg-clip-text text-transparent">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 bg-linear-to-r from-primary via-purple-500 to-accent bg-clip-text text-transparent">
             Resume
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-6">
@@ -269,7 +269,7 @@ export default function Resume() {
         id="achievement"
       >
         <div className="text-center mb-5 animate-slide-up">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 bg-gradient-to-r from-primary via-purple-500 to-accent bg-clip-text text-transparent">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 bg-linear-to-r from-primary via-purple-500 to-accent bg-clip-text text-transparent">
             Achievements
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-6">
