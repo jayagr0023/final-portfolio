@@ -75,6 +75,25 @@ const CERTIFICATES: certificate[] = [
       "Material UI",
     ],
   },
+  {
+    id: "3",
+    title: "Gate 2026 ",
+    provider: "IIT Guwahati",
+    description:
+      "Qualified for GATE 2026 with a score of 484, demonstrating strong understanding of computer science fundamentals and problem-solving skills. This achievement reflects dedication to mastering core concepts and readiness for advanced studies or competitive job opportunities in the tech industry.",
+    link: null,
+    img: "Gate.png",
+    technologies: [
+      "DBMS",
+      "CN",
+      "OS",
+      "CD",
+      "AFL",
+      "Maths",
+      "Data Structures",
+      "Algorithms",
+    ],
+  },
 ];
 
 export default function Resume() {
@@ -319,7 +338,7 @@ export default function Resume() {
                 Certificates
               </h1>
             </div>
-            <div className="content grid grid-cols-1 gap-6 mt-4">
+            <div className="content grid justify-items-center lg:grid-cols-2 gap-6 mt-4">
               {CERTIFICATES.map((certificate) => (
                 <Card key={certificate.id} className="animate-slide-up">
                   <CardHeader>
@@ -335,7 +354,17 @@ export default function Resume() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <img src={certificate.img} alt="Certificate" />
+                    <img
+                      src={certificate.img}
+                      alt="Certificate"
+                      className="cursor-zoom-in transition-transform duration-200 hover:scale-[1.01]"
+                      onClick={() => {
+                        setPreviewImage({
+                          src: certificate.img,
+                          title: `${certificate.title} Profile Preview`,
+                        });
+                      }}
+                    />
                   </CardContent>
                   <CardFooter className="flex-wrap gap-2 text-lg">
                     {certificate.technologies.map((tech) => (
@@ -373,7 +402,7 @@ export default function Resume() {
             <button
               type="button"
               onClick={() => setPreviewImage(null)}
-              className="absolute -top-12 right-0 text-white/90 hover:text-white transition-colors text-sm border border-white/20 rounded-md px-3 py-1"
+              className="absolute -top-12 right-0 text-white/90 cursor-pointer hover:text-white transition-colors text-sm border border-white/20 rounded-md px-3 py-1"
             >
               Close
             </button>

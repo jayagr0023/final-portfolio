@@ -25,22 +25,6 @@
 
   --card-border: 0 0% 90%;
 
-  --sidebar: 0 0% 94%;
-
-  --sidebar-foreground: 270 15% 15%;
-
-  --sidebar-border: 0 0% 88%;
-
-  --sidebar-primary: 270 60% 50%;
-
-  --sidebar-primary-foreground: 270 60% 98%;
-
-  --sidebar-accent: 0 0% 92%;
-
-  --sidebar-accent-foreground: 270 15% 20%;
-
-  --sidebar-ring: 270 60% 50%;
-
   --popover: 0 0% 94%;
 
   --popover-foreground: 270 15% 15%;
@@ -69,12 +53,6 @@
 
   --input: 0 0% 75%;
   --ring: 270 60% 50%;
-  --chart-1: 270 60% 45%;
-  --chart-2: 330 70% 50%;
-  --chart-3: 210 70% 50%;
-  --chart-4: 150 60% 45%;
-  --chart-5: 30 70% 50%;
-
   --font-sans: 'Poppins', 'Inter', system-ui, -apple-system, sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: 'Space Mono', Menlo, monospace;
@@ -91,14 +69,6 @@
   --spacing: 0.25rem;
 
   /* Automatically computed borders - intensity can be controlled by the user by the --opaque-button-border-intensity setting */
-
-  /* Fallback for older browsers */
-  --sidebar-primary-border: hsl(var(--sidebar-primary));
-  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-
-  /* Fallback for older browsers */
-  --sidebar-accent-border: hsl(var(--sidebar-accent));
-  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
 
   /* Fallback for older browsers */
   --primary-border: hsl(var(--primary));
@@ -158,22 +128,6 @@
 
   --card-border: 270 60% 25%;
 
-  --sidebar: 270 48% 13%;
-
-  --sidebar-foreground: 0 0% 100%;
-
-  --sidebar-border: 270 42% 17%;
-
-  --sidebar-primary: 270 70% 60%;
-
-  --sidebar-primary-foreground: 0 0% 100%;
-
-  --sidebar-accent: 270 45% 18%;
-
-  --sidebar-accent-foreground: 0 0% 100%;
-
-  --sidebar-ring: 270 70% 60%;
-
   --popover: 270 48% 15%;
 
   --popover-foreground: 0 0% 100%;
@@ -202,12 +156,6 @@
 
   --input: 270 45% 25%;
   --ring: 270 70% 60%;
-  --chart-1: 270 70% 65%;
-  --chart-2: 330 75% 65%;
-  --chart-3: 210 75% 65%;
-  --chart-4: 150 65% 60%;
-  --chart-5: 30 75% 65%;
-
   --shadow-2xs: 0px 1px 2px 0px hsl(270 60% 10% / 0.40);
   --shadow-xs: 0px 1px 3px 0px hsl(270 60% 10% / 0.50);
   --shadow-sm: 0px 2px 4px -1px hsl(270 60% 10% / 0.45), 0px 1px 2px -1px hsl(270 60% 10% / 0.35);
@@ -216,14 +164,6 @@
   --shadow-lg: 0px 10px 20px -3px hsl(270 60% 10% / 0.60), 0px 4px 8px -4px hsl(270 60% 10% / 0.50);
   --shadow-xl: 0px 20px 30px -5px hsl(270 60% 10% / 0.65), 0px 8px 12px -6px hsl(270 60% 10% / 0.55);
   --shadow-2xl: 0px 25px 50px -12px hsl(270 60% 10% / 0.70);
-
-  /* Fallback for older browsers */
-  --sidebar-primary-border: hsl(var(--sidebar-primary));
-  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-
-  /* Fallback for older browsers */
-  --sidebar-accent-border: hsl(var(--sidebar-accent));
-  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
 
   /* Fallback for older browsers */
   --primary-border: hsl(var(--primary));
