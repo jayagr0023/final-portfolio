@@ -14,6 +14,22 @@ type ProxiedImage = {
   buffer: Buffer;
 };
 
+type ImageAttempt = {
+  source: string;
+  url: string;
+  ok: boolean;
+  error?: string;
+};
+
+type CachedProfileImage = {
+  contentType: string;
+  buffer: Buffer;
+  source: string;
+  updatedAt: string;
+};
+
+const profileImageCache = new Map<"leetcode" | "gfg", CachedProfileImage>();
+
 async function fetchWithTimeout(
   url: string,
   options: RequestInit,
@@ -255,42 +271,110 @@ async function fetchImageCandidate(url: string, timeoutMs = 4500): Promise<Proxi
   };
 }
 
-async function fetchDirectProfileImage(platform: "leetcode" | "gfg"): Promise<ProxiedImage | null> {
+async function fetchDirectProfileImage(
+  platform: "leetcode" | "gfg",
+  attempts: ImageAttempt[],
+): Promise<ProxiedImage | null> {
   if (platform === "gfg") {
     const profileImageUrl = await fetchGfgProfileImage("2802jayagji");
     if (profileImageUrl) {
       try {
-        return await fetchImageCandidate(profileImageUrl, 6000);
-      } catch {
+        const image = await fetchImageCandidate(profileImageUrl, 6000);
+        attempts.push({
+          source: "direct-profile-image",
+          url: profileImageUrl,
+          ok: true,
+        });
+        return image;
+      } catch (error) {
+        attempts.push({
+          source: "direct-profile-image",
+          url: profileImageUrl,
+          ok: false,
+          error: error instanceof Error ? error.message : "unknown direct image fetch failure",
+        });
         return null;
       }
     }
+
+    attempts.push({
+      source: "direct-profile-image",
+      url: "https://www.geeksforgeeks.org/profile/2802jayagji",
+      ok: false,
+      error: "profile image URL extraction failed",
+    });
   }
 
   if (platform === "leetcode") {
     const profileImageUrl = await fetchLeetCodeProfileImage("AgJi232427");
     if (profileImageUrl) {
       try {
-        return await fetchImageCandidate(profileImageUrl, 6000);
-      } catch {
+        const image = await fetchImageCandidate(profileImageUrl, 6000);
+        attempts.push({
+          source: "direct-profile-image",
+          url: profileImageUrl,
+          ok: true,
+        });
+        return image;
+      } catch (error) {
+        attempts.push({
+          source: "direct-profile-image",
+          url: profileImageUrl,
+          ok: false,
+          error: error instanceof Error ? error.message : "unknown direct image fetch failure",
+        });
         return null;
       }
+    }
+
+    attempts.push({
+      source: "direct-profile-image",
+      url: "https://leetcode.com/u/AgJi232427/",
+      ok: false,
+      error: "profile image URL extraction failed",
+    });
+  }
+
+  return null;
+}
+
+async function fetchFirstValidImage(
+  candidates: string[],
+  attempts: ImageAttempt[],
+): Promise<ProxiedImage | null> {
+  for (const candidateUrl of candidates) {
+    try {
+      const image = await fetchImageCandidate(candidateUrl);
+      attempts.push({
+        source: "screenshot-provider",
+        url: candidateUrl,
+        ok: true,
+      });
+      return image;
+    } catch (error) {
+      attempts.push({
+        source: "screenshot-provider",
+        url: candidateUrl,
+        ok: false,
+        error: error instanceof Error ? error.message : "unknown screenshot provider failure",
+      });
     }
   }
 
   return null;
 }
 
-async function fetchFirstValidImage(candidates: string[]): Promise<ProxiedImage | null> {
-  if (candidates.length === 0) return null;
-
-  try {
-    return await Promise.any(
-      candidates.map((candidateUrl) => fetchImageCandidate(candidateUrl)),
-    );
-  } catch {
-    return null;
-  }
+function cacheProfileImage(
+  platform: "leetcode" | "gfg",
+  image: ProxiedImage,
+  source: string,
+) {
+  profileImageCache.set(platform, {
+    contentType: image.contentType,
+    buffer: image.buffer,
+    source,
+    updatedAt: new Date().toISOString(),
+  });
 }
 
 function createLeetCodeFallbackSvg(stats: LeetCodeStats | null): string {
@@ -423,15 +507,28 @@ export function registerRoutes(app: Express): void {
   app.get("/api/profile-image/:platform", async (req, res) => {
     const { platform } = req.params;
     const cacheBust = typeof req.query.v === "string" ? req.query.v : undefined;
+    const debug = req.query.debug === "1" || req.query.debug === "true";
 
     if (platform !== "leetcode" && platform !== "gfg") {
       res.status(400).json({ error: "Invalid platform" });
       return;
     }
 
+    const attempts: ImageAttempt[] = [];
+
     try {
-      const directImage = await fetchDirectProfileImage(platform);
+      const directImage = await fetchDirectProfileImage(platform, attempts);
       if (directImage) {
+        cacheProfileImage(platform, directImage, "direct-profile-image");
+        if (debug) {
+          res.json({
+            platform,
+            strategy: "direct-profile-image",
+            attempts,
+            cachedAt: profileImageCache.get(platform)?.updatedAt ?? null,
+          });
+          return;
+        }
         res.setHeader("Content-Type", directImage.contentType);
         res.setHeader(
           "Cache-Control",
@@ -445,8 +542,18 @@ export function registerRoutes(app: Express): void {
       const screenshotCandidates = getScreenshotCandidates(platform, cacheBust);
       const candidates = screenshotCandidates;
 
-      const bestImage = await fetchFirstValidImage(candidates);
+      const bestImage = await fetchFirstValidImage(candidates, attempts);
       if (bestImage) {
+        cacheProfileImage(platform, bestImage, "screenshot-provider");
+        if (debug) {
+          res.json({
+            platform,
+            strategy: "screenshot-provider",
+            attempts,
+            cachedAt: profileImageCache.get(platform)?.updatedAt ?? null,
+          });
+          return;
+        }
         res.setHeader("Content-Type", bestImage.contentType);
         // Keep cache short to avoid stale provider placeholders on serverless edge caches.
         res.setHeader(
@@ -467,15 +574,73 @@ export function registerRoutes(app: Express): void {
         leetcodeStatsResult.status === "fulfilled" ? leetcodeStatsResult.value : null;
       const gfgSolved = gfgSolvedResult.status === "fulfilled" ? gfgSolvedResult.value : null;
 
+      attempts.push({
+        source: "stats-fallback-check",
+        url: "/api/coding-stats",
+        ok: gfgSolved != null || leetcodeStats?.all != null,
+        error:
+          gfgSolved == null && leetcodeStats?.all == null
+            ? "stats unavailable"
+            : undefined,
+      });
+
+      const cached = profileImageCache.get(platform);
+      if (cached) {
+        if (debug) {
+          res.json({
+            platform,
+            strategy: "cached-last-success",
+            attempts,
+            cachedAt: cached.updatedAt,
+            cachedSource: cached.source,
+          });
+          return;
+        }
+
+        res.setHeader("Content-Type", cached.contentType);
+        res.setHeader(
+          "Cache-Control",
+          "public, max-age=120, s-maxage=120, stale-while-revalidate=300",
+        );
+        res.setHeader("X-Profile-Image-Source", "cached-last-success");
+        res.send(cached.buffer);
+        return;
+      }
+
       if (platform === "gfg") {
-        // Do not serve synthetic heatmap cards for GFG. Let the client show retry/error UI.
-        res.setHeader("Cache-Control", "no-store");
-        res.status(502).json({ error: "Unable to render GFG profile image from providers" });
+        if (debug) {
+          res.status(502).json({
+            platform,
+            strategy: "static-fallback-redirect",
+            attempts,
+            redirectTo: "/GFG.png",
+          });
+          return;
+        }
+
+        // Guaranteed fallback so deployed cards never break visually.
+        res.redirect(307, "/GFG.png");
         return;
       }
 
       if (platform === "leetcode") {
         const svg = createLeetCodeFallbackSvg(leetcodeStats);
+        if (debug) {
+          res.json({
+            platform,
+            strategy: "fallback-svg",
+            attempts,
+          });
+          return;
+        }
+
+        // Cache generated fallback so next request can be served quickly.
+        cacheProfileImage(platform, {
+          contentType: "image/svg+xml; charset=utf-8",
+          buffer: Buffer.from(svg, "utf-8"),
+        }, "fallback-svg");
+
+        res.setHeader("Cache-Control", "no-store");
         res.setHeader("Content-Type", "image/svg+xml; charset=utf-8");
         res.setHeader(
           "Cache-Control",
@@ -486,9 +651,28 @@ export function registerRoutes(app: Express): void {
         return;
       }
 
+      if (debug) {
+        res.status(502).json({
+          platform,
+          strategy: "all-failed",
+          attempts,
+        });
+        return;
+      }
+
       res.setHeader("Cache-Control", "no-store");
       res.status(502).json({ error: "All screenshot providers failed" });
-    } catch {
+    } catch (error) {
+      if (debug) {
+        res.status(500).json({
+          platform,
+          strategy: "exception",
+          attempts,
+          error: error instanceof Error ? error.message : "unknown error",
+        });
+        return;
+      }
+
       res.setHeader("Cache-Control", "no-store");
       res.status(500).json({ error: "Failed to proxy profile image" });
     }

@@ -433,13 +433,13 @@ export default function Resume() {
                       {achievement.description}
                     </p>
                   </CardContent>
-                  <CardFooter className="flex-wrap gap-2">
+                  <CardFooter className="grid md:grid-cols-2 lg:grid-cols-2  gap-2">
                     {achievement.link && (
                       <Button
                         asChild
                         size="lg"
                         variant="outline"
-                        className="w-full"
+                        // className="w-full"
                       >
                         <a
                           href={achievement.link}
@@ -454,7 +454,7 @@ export default function Resume() {
                       type="button"
                       size="lg"
                       variant="secondary"
-                      className="w-full"
+                      // className="w-full"
                       onClick={() => handleRetryImage(achievement.platform)}
                     >
                       Retry Live Image
