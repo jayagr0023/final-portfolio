@@ -33,9 +33,9 @@ const MAJOR: Project[] = [
   },
   {
     id: "2",
-    title: "StayBite",
+    title: "HomieBites",
     longDescription:
-      "NestEase is a full stack web platform for students and working professionals to find PG accommodations and meal services when relocating to a new city. Built with React, TypeScript, Node.js, Express, and MongoDB, it features three roles — user, provider, and superadmin — with JWT authentication. Users can browse, filter, and book verified listings. Providers manage their listings and incoming requests. Payments are processed via Razorpay. The platform includes location-based nearby suggestions between PGs and meal services, GSAP animations, and a fully responsive design.",
+      "HomieBites is a full stack web platform for students and working professionals to find PG accommodations and meal services when relocating to a new city. It features three roles — user, provider, and superadmin — with JWT authentication. Users can browse, filter, and book verified listings. Providers manage their listings and incoming requests. The platform includes location-based nearby suggestions between PGs and meal services.",
     technologies: [
       "HTML",
       "Tailwind CSS",
@@ -44,13 +44,14 @@ const MAJOR: Project[] = [
       "Express",
       "MongoDB",
       "Node.js",
+      "Razorpay",
       "Cloudinary",
       "JWT Authentication",
       "GSAP Animations",
     ],
-    demoUrl: null,
-    githubUrl: "https://github.com/Techie-AgrawalJi/MinorProject",
-    imageUrl: null,
+    demoUrl: "https://homie-bites.vercel.app/",
+    githubUrl: "https://github.com/Techie-AgrawalJi/HomieBites",
+    imageUrl: "HB.png",
   },
   {
     id: "3",
@@ -77,6 +78,23 @@ const MAJOR: Project[] = [
 const MINOR: Project[] = [
   {
     id: "1",
+    title: "Todo React App",
+    longDescription:
+      "A modern dark-themed Todo app with Redux Toolkit state management, priority tags, completion tracking, filters (All/Active/Done), toggle-all, and clear-completed actions. It features a responsive UI, smooth animations, and a polished glassmorphism-style interface built for a clean, focused task-planning experience.",
+    technologies: [
+      "HTML",
+      "JavaScript",
+      "CSS",
+      "React",
+      "Redux Toolkit",
+      "Vite",
+    ],
+    demoUrl: "https://todo-app-create-task.vercel.app/",
+    githubUrl: "https://github.com/Techie-AgrawalJi/Todo-App",
+    imageUrl: "todo.png",
+  },
+  {
+    id: "2",
     title: "Role Playing Game",
     longDescription:
       "This is fully functional built using vanilla JavaScript, HTML, and CSS. It features a player character that interact with enemy characters. The game includes basic mechanics such as health points, attack damage.",
@@ -86,7 +104,7 @@ const MINOR: Project[] = [
     imageUrl: "RPG.png",
   },
   {
-    id: "2",
+    id: "3",
     title: "Calorie Counter",
     longDescription:
       " A lightweight calorie tracking app built with vanilla JavaScript, HTML & CSS. Log meals, set portions, and monitor your daily intake — all in a clean, distraction-free interface. ",
@@ -96,7 +114,7 @@ const MINOR: Project[] = [
     imageUrl: "CC.png",
   },
   {
-    id: "3",
+    id: "4",
     title: "Basic Portfolio",
     longDescription:
       "Different from the first one, this simple project reflects my understanding of DOM manipulation, event handling, and responsive design using only HTML, CSS, and JavaScript DOM for changing page information. It features a clean layout with sections for about me, projects, and contact information linked to my GitHub and LinkedIn profiles.",
@@ -106,7 +124,7 @@ const MINOR: Project[] = [
     imageUrl: "portfolio.png",
   },
   {
-    id: "4",
+    id: "5",
     title: "Rock Paper Scissors Game",
     longDescription:
       "A simple Rock-Paper-Scissors game built with vanilla JavaScript, HTML, and CSS. The game allows users to play against the computer, which randomly selects its move. The interface is designed to be intuitive and responsive, providing immediate feedback on the outcome of each round. Players can keep track of their wins, losses, and ties as they play.",

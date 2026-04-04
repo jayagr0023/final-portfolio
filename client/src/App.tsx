@@ -15,8 +15,18 @@ function Router() {
   useLayoutEffect(() => {
     const restoreHomeScroll = sessionStorage.getItem("restoreHomeScroll") === "1";
     const savedHomeScroll = Number(sessionStorage.getItem("homeScrollY") ?? "0");
+    const hash = window.location.hash;
 
     if (location === "/") {
+      if (hash) {
+        // Let hash-based navigation from other routes land on the target section.
+        requestAnimationFrame(() => {
+          const target = document.querySelector(hash);
+          target?.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+        return;
+      }
+
       if (restoreHomeScroll) {
         window.scrollTo(0, Number.isFinite(savedHomeScroll) ? savedHomeScroll : 0);
         sessionStorage.removeItem("restoreHomeScroll");
