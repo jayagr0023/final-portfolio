@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useEffect, useRef, useState } from "react";
-import { certificate } from "@shared/schema";
+import { Achievement, certificate } from "@shared/schema";
 import { Document, Page, pdfjs } from "react-pdf";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -20,51 +20,24 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 
 const RESUME_PDF = "/Jay_Agrawal_CV.pdf";
 
-type DsaPlatform = "leetcode" | "gfg";
-
-type CodingStatsResponse = {
-  leetcodeSolved: number | null;
-  gfgSolved: number | null;
-  updatedAt: string;
-};
-
-type DsaCard = {
-  id: string;
-  platform: DsaPlatform;
-  profileLabel: string;
-  description: string;
-  link: string;
-};
-
-const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
-
-function getApiUrl(path: string): string {
-  return API_BASE ? `${API_BASE}${path}` : path;
-}
-
-const DSA: DsaCard[] = [
+const DSA: Achievement[] = [
   {
     id: "1",
-    platform: "leetcode",
-    profileLabel: "LeetCode",
+    title: "LeetCode - 180+ problems solved",
     description:
       "Demonstrated strong problem-solving skills by solving coding problems on LeetCode, covering a wide range of topics including arrays, linked lists, trees, graphs, dynamic programming, and more.",
     link: "https://leetcode.com/u/AgJi232427/",
+    img: "LC.png",
   },
   {
     id: "2",
-    platform: "gfg",
-    profileLabel: "GFG",
+    title: "GFG - 60+ problems solved",
     description:
       "Solved GeeksforGeeks problems also to strengthen core data structures and algorithms fundamentals, with focused practice across arrays, linked lists, trees, graphs, recursion, and dynamic programming.",
     link: "https://www.geeksforgeeks.org/profile/2802jayagji/?tab=activity",
+    img: "GFG.png",
   },
 ];
-
-const DSA_FALLBACK_IMAGES: Record<DsaPlatform, string> = {
-  leetcode: "LC.png",
-  gfg: "GFG.png",
-};
 
 const CERTIFICATES: certificate[] = [
   {
@@ -133,82 +106,6 @@ export default function Resume() {
   const [mobilePdfWidth, setMobilePdfWidth] = useState(360);
   const [mobilePdfPages, setMobilePdfPages] = useState(0);
   const [mobilePdfFailed, setMobilePdfFailed] = useState(false);
-  const [codingStats, setCodingStats] = useState<CodingStatsResponse>({
-    leetcodeSolved: null,
-    gfgSolved: null,
-    updatedAt: "",
-  });
-  const [statsUnavailable, setStatsUnavailable] = useState(false);
-  const [cacheBustSeed] = useState(() => Date.now().toString(36));
-  const [imageRetries, setImageRetries] = useState<Record<DsaPlatform, number>>({
-    leetcode: 0,
-    gfg: 0,
-  });
-  const [imageFallbackActive, setImageFallbackActive] = useState<
-    Record<DsaPlatform, boolean>
-  >({
-    leetcode: false,
-    gfg: false,
-  });
-
-  useEffect(() => {
-    let active = true;
-
-    const fetchStats = async () => {
-      try {
-        const response = await fetch(getApiUrl("/api/coding-stats"), {
-          cache: "no-store",
-        });
-
-        if (!response.ok) {
-          throw new Error(`stats endpoint failed: ${response.status}`);
-        }
-
-        const data = (await response.json()) as CodingStatsResponse;
-        if (!active) return;
-
-        setCodingStats({
-          leetcodeSolved: data.leetcodeSolved,
-          gfgSolved: data.gfgSolved,
-          updatedAt: data.updatedAt,
-        });
-        setStatsUnavailable(false);
-      } catch {
-        if (!active) return;
-        setStatsUnavailable(true);
-      }
-    };
-
-    fetchStats();
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const dsaCards = DSA.map((entry) => {
-    const solvedCount =
-      entry.platform === "leetcode"
-        ? codingStats.leetcodeSolved
-        : codingStats.gfgSolved;
-    const imageSrc = imageFallbackActive[entry.platform]
-      ? DSA_FALLBACK_IMAGES[entry.platform]
-      : `${getApiUrl(`/api/profile-image/${entry.platform}`)}?v=${cacheBustSeed}-${imageRetries[entry.platform]}`;
-
-    return {
-      ...entry,
-      title:
-        solvedCount != null
-          ? `${entry.profileLabel} - ${solvedCount} problems solved`
-          : `${entry.profileLabel} - problems solved data unavailable`,
-      imageSrc,
-    };
-  });
-
-  const handleRetryImage = (platform: DsaPlatform) => {
-    setImageFallbackActive((prev) => ({ ...prev, [platform]: false }));
-    setImageRetries((prev) => ({ ...prev, [platform]: prev[platform] + 1 }));
-  };
 
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
@@ -385,18 +282,9 @@ export default function Resume() {
               <h1 className="text-2xl lg:text-3xl text-center lg:text-left text-fuchsia-600">
                 DSA &amp; Problem Solving
               </h1>
-              {statsUnavailable ? (
-                <p className="text-sm text-muted-foreground mt-2 text-center lg:text-left">
-                  Live solved-count fetch failed right now, image cards still use live API with fallback.
-                </p>
-              ) : codingStats.updatedAt ? (
-                <p className="text-sm text-muted-foreground mt-2 text-center lg:text-left">
-                  Last synced: {new Date(codingStats.updatedAt).toLocaleString()}
-                </p>
-              ) : null}
             </div>
             <div className="content grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4 mb-4">
-              {dsaCards.map((achievement) => (
+              {DSA.map((achievement) => (
                 <Card key={achievement.id} className="animate-slide-up">
                   <CardHeader>
                     <CardTitle className="flex justify-between">
@@ -407,39 +295,28 @@ export default function Resume() {
                   </CardHeader>
                   <CardContent>
                     <img
-                      src={achievement.imageSrc}
+                      src={achievement.img}
                       alt={`${achievement.title} profile`}
                       className="w-full h-60 object-cover rounded-md mb-3 cursor-zoom-in transition-transform duration-200 hover:scale-[1.01]"
                       loading="lazy"
-                      onError={() => {
-                        setImageFallbackActive((prev) => ({
-                          ...prev,
-                          [achievement.platform]: true,
-                        }));
-                      }}
                       onClick={() => {
                         setPreviewImage({
-                          src: achievement.imageSrc,
+                          src: achievement.img,
                           title: `${achievement.title} Profile Preview`,
                         });
                       }}
                     />
-                    {imageFallbackActive[achievement.platform] ? (
-                      <p className="text-xs text-muted-foreground mb-3">
-                        Live image provider was unavailable. Showing saved fallback image.
-                      </p>
-                    ) : null}
                     <p className="text-sm text-muted-foreground">
                       {achievement.description}
                     </p>
                   </CardContent>
-                  <CardFooter className="grid md:grid-cols-2 lg:grid-cols-2  gap-2">
+                  <CardFooter>
                     {achievement.link && (
                       <Button
                         asChild
                         size="lg"
                         variant="outline"
-                        // className="w-full"
+                        className="w-full"
                       >
                         <a
                           href={achievement.link}
@@ -450,15 +327,6 @@ export default function Resume() {
                         </a>
                       </Button>
                     )}
-                    <Button
-                      type="button"
-                      size="lg"
-                      variant="secondary"
-                      // className="w-full"
-                      onClick={() => handleRetryImage(achievement.platform)}
-                    >
-                      Retry Live Image
-                    </Button>
                   </CardFooter>
                 </Card>
               ))}
