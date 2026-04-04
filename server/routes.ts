@@ -209,6 +209,7 @@ async function fetchImageCandidate(url: string, timeoutMs = 4500): Promise<Proxi
     headers: {
       "User-Agent": "Mozilla/5.0",
       Accept: "image/*,*/*;q=0.8",
+      Referer: "https://www.geeksforgeeks.org/",
     },
   }, timeoutMs);
 
@@ -252,6 +253,32 @@ async function fetchImageCandidate(url: string, timeoutMs = 4500): Promise<Proxi
     contentType,
     buffer,
   };
+}
+
+async function fetchDirectProfileImage(platform: "leetcode" | "gfg"): Promise<ProxiedImage | null> {
+  if (platform === "gfg") {
+    const profileImageUrl = await fetchGfgProfileImage("2802jayagji");
+    if (profileImageUrl) {
+      try {
+        return await fetchImageCandidate(profileImageUrl, 6000);
+      } catch {
+        return null;
+      }
+    }
+  }
+
+  if (platform === "leetcode") {
+    const profileImageUrl = await fetchLeetCodeProfileImage("AgJi232427");
+    if (profileImageUrl) {
+      try {
+        return await fetchImageCandidate(profileImageUrl, 6000);
+      } catch {
+        return null;
+      }
+    }
+  }
+
+  return null;
 }
 
 async function fetchFirstValidImage(candidates: string[]): Promise<ProxiedImage | null> {
@@ -403,6 +430,18 @@ export function registerRoutes(app: Express): void {
     }
 
     try {
+      const directImage = await fetchDirectProfileImage(platform);
+      if (directImage) {
+        res.setHeader("Content-Type", directImage.contentType);
+        res.setHeader(
+          "Cache-Control",
+          "public, max-age=300, s-maxage=300, stale-while-revalidate=600",
+        );
+        res.setHeader("X-Profile-Image-Source", "direct-profile-image");
+        res.send(directImage.buffer);
+        return;
+      }
+
       const screenshotCandidates = getScreenshotCandidates(platform, cacheBust);
       const candidates = screenshotCandidates;
 
@@ -414,6 +453,7 @@ export function registerRoutes(app: Express): void {
           "Cache-Control",
           "public, max-age=120, s-maxage=120, stale-while-revalidate=300",
         );
+        res.setHeader("X-Profile-Image-Source", "screenshot-provider");
         res.send(bestImage.buffer);
         return;
       }
@@ -429,6 +469,7 @@ export function registerRoutes(app: Express): void {
 
       if (platform === "gfg") {
         // Do not serve synthetic heatmap cards for GFG. Let the client show retry/error UI.
+        res.setHeader("Cache-Control", "no-store");
         res.status(502).json({ error: "Unable to render GFG profile image from providers" });
         return;
       }
@@ -440,12 +481,15 @@ export function registerRoutes(app: Express): void {
           "Cache-Control",
           "public, max-age=120, s-maxage=120, stale-while-revalidate=300",
         );
+        res.setHeader("X-Profile-Image-Source", "fallback-svg");
         res.send(svg);
         return;
       }
 
+      res.setHeader("Cache-Control", "no-store");
       res.status(502).json({ error: "All screenshot providers failed" });
     } catch {
+      res.setHeader("Cache-Control", "no-store");
       res.status(500).json({ error: "Failed to proxy profile image" });
     }
   });
