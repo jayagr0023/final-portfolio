@@ -2,7 +2,7 @@ import { Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 // import { ThemeToggle } from "@/components/ThemeToggle";
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
 
 const navLinks = [
   { name: "Home", href: "/", isRoute: true },
@@ -92,7 +92,7 @@ export function Navigation() {
           <div className="hidden md:flex items-center gap-6">
             {navLinks.map((link) =>
               link.isRoute ? (
-                <Link
+                <a
                   key={link.name}
                   href={link.href}
                   className={`text-sm font-medium transition-all duration-300 relative group ${
@@ -108,7 +108,7 @@ export function Navigation() {
                       isActive(link) ? "w-full" : "w-0 group-hover:w-full"
                     }`}
                   />
-                </Link>
+                  </a>
               ) : (
                 <a
                   key={link.name}
@@ -177,7 +177,7 @@ export function Navigation() {
           <div className="px-6 py-4 space-y-3">
             {navLinks.map((link) =>
               link.isRoute ? (
-                <Link
+                <a
                   key={link.name}
                   href={link.href}
                   onClick={() => setIsMobileMenuOpen(false)}
@@ -189,7 +189,7 @@ export function Navigation() {
                   data-testid={`link-mobile-${link.name.toLowerCase()}`}
                 >
                   {link.name}
-                </Link>
+                </a>
               ) : (
                 <a
                   key={link.name}

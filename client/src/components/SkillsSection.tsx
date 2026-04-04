@@ -40,7 +40,7 @@ export function SkillsSection() {
   return (
     <section
       id="skills"
-      className="relative lg:bottom-1 md:top-0 top-10"
+      className="relative mb-15 md:mb-0 lg:bottom-1 md:top-0 top-10"
       data-testid="section-skills"
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-12">

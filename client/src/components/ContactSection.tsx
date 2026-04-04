@@ -77,7 +77,7 @@ export function ContactSection() {
   return (
     <section
       id="contact"
-      className="py-24 relative"
+      className="py-12 md:py-24 relative"
       data-testid="section-contact"
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
