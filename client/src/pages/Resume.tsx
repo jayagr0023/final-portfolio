@@ -1,4 +1,4 @@
-import { Download, FileText } from "lucide-react";
+import { Download, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Navigation } from "@/components/Navigation";
@@ -18,24 +18,25 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   import.meta.url,
 ).toString();
 
-const RESUME_PDF = "/Jay_Agrawal_CV.pdf";
+const RESUME_PDF = "/jay_resume.pdf";
 
-const DSA: Achievement[] = [
+type DsaAchievement = Omit<Achievement, "link"> & {
+  link: string;
+  iconSrc: string;
+};
+
+const DSA: DsaAchievement[] = [
   {
     id: "1",
-    title: "LeetCode - 180+ problems solved",
-    description:
-      "Demonstrated strong problem-solving skills by solving coding problems on LeetCode, covering a wide range of topics including arrays, linked lists, trees, graphs, dynamic programming, and more.",
+    title: "200+ Problems Solved",
     link: "https://leetcode.com/u/AgJi232427/",
-    img: "LC.png",
+    iconSrc: "/LC.png",
   },
   {
     id: "2",
-    title: "GFG - 60+ problems solved",
-    description:
-      "Solved GeeksforGeeks problems also to strengthen core data structures and algorithms fundamentals, with focused practice across arrays, linked lists, trees, graphs, recursion, and dynamic programming.",
+    title: "60+ Problems Solved",
     link: "https://www.geeksforgeeks.org/profile/2802jayagji/?tab=activity",
-    img: "GFG.png",
+    iconSrc: "/GFG.png",
   },
 ];
 
@@ -44,9 +45,6 @@ const CERTIFICATES: certificate[] = [
     id: "1",
     title: "Responsive Web Design",
     provider: "freeCodeCamp",
-    description:
-      "Earned the Responsive Web Design certification, validating expertise in designing and building responsive websites that adapt seamlessly to various screen sizes and devices, utilizing HTML, CSS, and modern design principles.",
-    link: null,
     img: "FCC.png",
     technologies: ["HTML", "CSS", "Flexbox", "Grid", "Media Queries"],
   },
@@ -54,9 +52,6 @@ const CERTIFICATES: certificate[] = [
     id: "2",
     title: "Web Development ",
     provider: "Apna College",
-    description:
-      "Completed the Web Development certification from Apna College, demonstrating proficiency in front-end and back-end web development technologies, including HTML, CSS, JavaScript, and popular frameworks, showcasing the ability to build dynamic and interactive web applications.",
-    link: null,
     img: "ACC.png",
     technologies: [
       "HTML",
@@ -79,9 +74,6 @@ const CERTIFICATES: certificate[] = [
     id: "3",
     title: "Gate 2026 ",
     provider: "IIT Guwahati",
-    description:
-      "Qualified for GATE 2026 with a score of 484, demonstrating strong understanding of computer science fundamentals and problem-solving skills. This achievement reflects dedication to mastering core concepts and readiness for advanced studies or competitive job opportunities in the tech industry.",
-    link: null,
     img: "Gate.png",
     technologies: [
       "DBMS",
@@ -286,48 +278,28 @@ export default function Resume() {
             <div className="content grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4 mb-4">
               {DSA.map((achievement) => (
                 <Card key={achievement.id} className="animate-slide-up">
-                  <CardHeader>
-                    <CardTitle className="flex justify-between">
-                      <h3 className="text-base lg:text-lg font-semibold">
-                        {achievement.title}
-                      </h3>
+                  <CardHeader className="pb-4">
+                    <CardTitle className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <img
+                          src={achievement.iconSrc}
+                          className="h-8 w-8 rounded-sm object-contain shrink-0"
+                        />
+                        <h3 className="text-base lg:text-lg font-semibold truncate">
+                          {achievement.title}
+                        </h3>
+                      </div>
+                      <a
+                        href={achievement.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`Open ${achievement.title} profile`}
+                        className="inline-flex items-center justify-center rounded-md border border-border p-2 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors shrink-0"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <img
-                      src={achievement.img}
-                      alt={`${achievement.title} profile`}
-                      className="w-full h-60 object-cover rounded-md mb-3 cursor-zoom-in transition-transform duration-200 hover:scale-[1.01]"
-                      loading="lazy"
-                      onClick={() => {
-                        setPreviewImage({
-                          src: achievement.img,
-                          title: `${achievement.title} Profile Preview`,
-                        });
-                      }}
-                    />
-                    <p className="text-sm text-muted-foreground">
-                      {achievement.description}
-                    </p>
-                  </CardContent>
-                  <CardFooter>
-                    {achievement.link && (
-                      <Button
-                        asChild
-                        size="lg"
-                        variant="outline"
-                        className="w-full"
-                      >
-                        <a
-                          href={achievement.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          View Profile
-                        </a>
-                      </Button>
-                    )}
-                  </CardFooter>
                 </Card>
               ))}
             </div>

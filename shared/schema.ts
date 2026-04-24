@@ -29,16 +29,12 @@ export interface Project {
 export interface Achievement {
   id: string;
   title: string;
-  description?: string | null;
   link: string|null;
-  img: string;
 }
 export interface certificate {
   id: string;
   title: string;
   provider: string;
-  description?: string | null;
-  link: string|null;
   img: string;
   technologies: string[];
 }
