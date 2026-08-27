@@ -88,7 +88,11 @@ const CERTIFICATES: certificate[] = [
   },
 ];
 
-export default function Resume() {
+interface ResumeProps {
+  showNavigation?: boolean;
+}
+
+export default function Resume({ showNavigation = true }: ResumeProps) {
   const mobilePdfContainerRef = useRef<HTMLDivElement | null>(null);
   const [previewImage, setPreviewImage] = useState<{
     src: string;
@@ -152,7 +156,7 @@ export default function Resume() {
 
   return (
     <div className="min-h-screen">
-      <Navigation />
+      {showNavigation && <Navigation />}
       <div
         className="resume_container max-w-5xl mx-auto px-4 pt-16 pb-16  lg:px-8"
         id="resume"
@@ -252,10 +256,6 @@ export default function Resume() {
           )}
         </div>
       </div>
-      <div
-        className="animate-slide-up rounded-xl overflow-hidden border border-border shadow-2xl mb-4"
-        style={{ animationDelay: "150ms" }}
-      ></div>
       <div
         className="Achievement_Container max-w-5xl mx-auto px-4 pb-16 sm:px-6 lg:px-8"
         id="achievement"

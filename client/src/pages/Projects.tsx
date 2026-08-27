@@ -13,7 +13,7 @@ import { Navigation } from "@/components/Navigation";
 
 const MAJOR: Project[] = [
   {
-    id: "4",
+    id: "1",
     title: "DivineTanyaa",
     longDescription:
       "A booking site built for a tarot and astrology practitioner — clients can browse services, check pricing and reviews, and reserve a slot through a scheduling system that handles availability and payments end to end.",
@@ -30,24 +30,6 @@ const MAJOR: Project[] = [
     ],
     demoUrl: "https://tarot-by-tanya.vercel.app/",
     githubUrl: "https://github.com/Techie-AgrawalJi/tarotByTanya",
-  },
-  {
-    id: "1",
-    title: "VenueVista",
-    longDescription:
-      "A full-stack learning project built under mentorship, featuring venue listings with nearby hotel pricing, interactive maps, reviews & ratings, user authentication, and complete CRUD operations.",
-    technologies: [
-      "HTML",
-      "Bootstrap CSS",
-      "JavaScript",
-      "Express",
-      "MongoDB",
-      "Node.js",
-      "Cloudinary",
-      "Mapbox",
-    ],
-    demoUrl: "https://venue-vista-rosy.vercel.app/",
-    githubUrl: "https://github.com/Techie-AgrawalJi/VenueVista",
   },
   {
     id: "2",
@@ -72,23 +54,42 @@ const MAJOR: Project[] = [
   },
   {
     id: "3",
-    title: "Talkie",
+    title: "VenueVista",
     longDescription:
-      "Talkie is a real-time chat application built with React, TypeScript, Node.js, Express, and MongoDB. It features JWT authentication for secure user access, allowing users to create accounts and log in. The app supports one-on-one and group chats, with messages stored in MongoDB for persistence. Real-time communication is enabled through WebSockets, providing instant message delivery. The interface is designed with Tailwind CSS for a responsive and user-friendly experience.",
+      "A full-stack learning project built under mentorship, featuring venue listings with nearby hotel pricing, interactive maps, reviews & ratings, user authentication, and complete CRUD operations.",
     technologies: [
       "HTML",
-      "Tailwind CSS",
-      "TypeScript",
-      "React",
+      "Bootstrap CSS",
+      "JavaScript",
       "Express",
       "MongoDB",
       "Node.js",
-      "JWT Authentication",
-      "GSAP Animations",
+      "Cloudinary",
+      "Mapbox",
     ],
-    demoUrl: null,
-    githubUrl: null,
+    demoUrl: "https://venue-vista-rosy.vercel.app/",
+    githubUrl: "https://github.com/Techie-AgrawalJi/VenueVista",
   },
+  
+  // {
+  //   id: "3",
+  //   title: "Talkie",
+  //   longDescription:
+  //     "Talkie is a real-time chat application built with React, TypeScript, Node.js, Express, and MongoDB. It features JWT authentication for secure user access, allowing users to create accounts and log in. The app supports one-on-one and group chats, with messages stored in MongoDB for persistence. Real-time communication is enabled through WebSockets, providing instant message delivery. The interface is designed with Tailwind CSS for a responsive and user-friendly experience.",
+  //   technologies: [
+  //     "HTML",
+  //     "Tailwind CSS",
+  //     "TypeScript",
+  //     "React",
+  //     "Express",
+  //     "MongoDB",
+  //     "Node.js",
+  //     "JWT Authentication",
+  //     "GSAP Animations",
+  //   ],
+  //   demoUrl: null,
+  //   githubUrl: null,
+  // },
 ];
 
 const MINOR: Project[] = [
@@ -146,10 +147,14 @@ const MINOR: Project[] = [
   },
 ];
 
-export default function Projects() {
+interface ProjectsProps {
+  showNavigation?: boolean;
+}
+
+export default function Projects({ showNavigation = true }: ProjectsProps) {
   return (
     <div className="min-h-screen">
-      <Navigation />
+      {showNavigation && <Navigation />}
       <div className="major max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
         <div className="text-center mb-12 animate-slide-up">
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 bg-linear-to-r from-primary via-purple-500 to-accent bg-clip-text text-transparent">
@@ -159,9 +164,7 @@ export default function Projects() {
             Explore my portfolio of web applications, tools, and creative
             projects
           </p>
-          <p className="italic text-sm text-muted-foreground/60 bg-linear-to-r from-primary/30 to-accent/30 bg-clip-text ">
-            "Innovation distinguishes between a leader and a follower."
-          </p>
+        
         </div>
         <div className="first ">
           <div className="heading mb-4 text-center sm:text-left ">

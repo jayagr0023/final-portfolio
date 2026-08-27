@@ -5,11 +5,23 @@ import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 
 const navLinks = [
-  { name: "Home", href: "/", isRoute: true },
-  { name: "Projects", href: "/projects", isRoute: true },
-  { name: "About", href: "/resume", isRoute: true },
-  { name: "Skills", href: "#skills", isRoute: false },
-  { name: "Contact", href: "#contact", isRoute: false },
+  { name: "Home", href: "#home", mobileName: "Home", mobileHref: "/" },
+  {
+    name: "Projects",
+    href: "#projects",
+    mobileName: "Projects",
+    mobileHref: "/projects",
+  },
+  { name: "Resume", href: "#resume", mobileName: "About", mobileHref: "/resume" },
+  {
+    name: "Achievements",
+    href: "#achievement",
+    mobileName: "About",
+    mobileHref: "/resume",
+    desktopOnly: true,
+  },
+  { name: "Skills", href: "#skills", mobileName: "Skills", mobileHref: "#skills" },
+  { name: "Contact", href: "#contact", mobileName: "Contact", mobileHref: "#contact" },
 ];
 
 export function Navigation() {
@@ -23,7 +35,14 @@ export function Navigation() {
       setIsScrolled(window.scrollY > 50);
 
       if (location === "/") {
-        const sections = ["home", "skills", "contact"];
+        const sections = [
+          "home",
+          "projects",
+          "resume",
+          "achievement",
+          "skills",
+          "contact",
+        ];
         const current = sections.find((section) => {
           const element = document.getElementById(section);
           if (element) {
@@ -45,21 +64,15 @@ export function Navigation() {
   const handleClick = (link: (typeof navLinks)[0]) => {
     setIsMobileMenuOpen(false);
 
-    if (!link.isRoute) {
-      if (location !== "/") {
-        window.location.href = "/" + link.href;
-      } else {
-        const element = document.querySelector(link.href);
-        element?.scrollIntoView({ behavior: "smooth" });
-      }
-    }
+    const element = document.querySelector(link.href);
+    element?.scrollIntoView({ behavior: "smooth" });
   };
 
   const isActive = (link: (typeof navLinks)[0]) => {
-    if (link.isRoute) {
-      return location === link.href;
+    if (location !== "/" && link.mobileHref.startsWith("/")) {
+      return location === link.mobileHref;
     }
-    return location === "/" && activeSection === link.href.substring(1);
+    return activeSection === link.href.substring(1);
   };
 
   return (
@@ -74,42 +87,21 @@ export function Navigation() {
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <div className="flex items-center justify-between h-16">
           <a
-            href="/"
+            href="#home"
             className="text-xl lg:font-bold gradient-text"
             onClick={(e) => {
               e.preventDefault();
-              if (location === "/") {
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              } else {
-                window.location.href = "/";
-              }
+              document
+                .getElementById("home")
+                ?.scrollIntoView({ behavior: "smooth" });
             }}
             data-testid="link-logo"
           >
             Jay Agrawal
           </a>
 
-          <div className="hidden md:flex items-center gap-6">
-            {navLinks.map((link) =>
-              link.isRoute ? (
-                <a
-                  key={link.name}
-                  href={link.href}
-                  className={`text-sm font-medium transition-all duration-300 relative group ${
-                    isActive(link)
-                      ? "text-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                  data-testid={`link-${link.name.toLowerCase()}`}
-                >
-                  {link.name}
-                  <span
-                    className={`absolute -bottom-1 left-0 h-0.5 bg-gradient-to-r from-primary to-accent transition-all duration-300 ${
-                      isActive(link) ? "w-full" : "w-0 group-hover:w-full"
-                    }`}
-                  />
-                  </a>
-              ) : (
+          <div className="hidden lg:flex items-center gap-6">
+            {navLinks.map((link) => (
                 <a
                   key={link.name}
                   href={link.href}
@@ -134,26 +126,10 @@ export function Navigation() {
               ),
             )}
 
-            {location === "/resume" && (
-              <div className="flex items-center gap-4 pl-2 border-l border-border">
-                <a
-                  href="#resume"
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Resume
-                </a>
-                <a
-                  href="#achievement"
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Achievement
-                </a>
-              </div>
-            )}
             {/* <ThemeToggle /> */}
           </div>
 
-          <div className="flex items-center gap-2 md:hidden">
+          <div className="flex items-center gap-2 lg:hidden">
             {/* <ThemeToggle /> */}
             <Button
               size="icon"
@@ -173,30 +149,19 @@ export function Navigation() {
       </div>
 
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-background/95 backdrop-blur-md border-b border-border animate-slide-up">
+        <div className="lg:hidden bg-background/95 backdrop-blur-md border-b border-border animate-slide-up">
           <div className="px-6 py-4 space-y-3">
-            {navLinks.map((link) =>
-              link.isRoute ? (
+            {navLinks.filter((link) => !link.desktopOnly).map((link) => (
                 <a
                   key={link.name}
-                  href={link.href}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`block text-base font-medium transition-colors py-2 ${
-                    isActive(link)
-                      ? "text-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                  data-testid={`link-mobile-${link.name.toLowerCase()}`}
-                >
-                  {link.name}
-                </a>
-              ) : (
-                <a
-                  key={link.name}
-                  href={link.href}
+                  href={link.mobileHref}
                   onClick={(e) => {
-                    e.preventDefault();
-                    handleClick(link);
+                    if (!link.mobileHref.startsWith("/")) {
+                      e.preventDefault();
+                      handleClick(link);
+                    } else {
+                      setIsMobileMenuOpen(false);
+                    }
                   }}
                   className={`block text-base font-medium transition-colors py-2 ${
                     isActive(link)
@@ -205,29 +170,11 @@ export function Navigation() {
                   }`}
                   data-testid={`link-mobile-${link.name.toLowerCase()}`}
                 >
-                  {link.name}
+                  {link.mobileName}
                 </a>
               ),
             )}
 
-            {location === "/resume" && (
-              <>
-                <a
-                  href="#resume"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block text-base font-medium transition-colors py-2 text-muted-foreground hover:text-foreground"
-                >
-                  Resume
-                </a>
-                <a
-                  href="#achievement"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block text-base font-medium transition-colors py-2 text-muted-foreground hover:text-foreground"
-                >
-                  Achievement
-                </a>
-              </>
-            )}
           </div>
         </div>
       )}
