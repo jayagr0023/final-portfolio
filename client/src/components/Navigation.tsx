@@ -86,7 +86,7 @@ export function Navigation() {
             }}
             data-testid="link-logo"
           >
-            Agrawal Ji
+            Jay Agrawal
           </a>
 
           <div className="hidden md:flex items-center gap-6">

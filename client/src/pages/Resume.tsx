@@ -28,13 +28,13 @@ type DsaAchievement = Omit<Achievement, "link"> & {
 const DSA: DsaAchievement[] = [
   {
     id: "1",
-    title: "200+ Problems Solved",
+    title: "250+ Problems Solved",
     link: "https://leetcode.com/u/AgJi232427/",
     iconSrc: "/LC.png",
   },
   {
     id: "2",
-    title: "60+ Problems Solved",
+    title: "70+ Problems Solved",
     link: "https://www.geeksforgeeks.org/profile/2802jayagji/?tab=activity",
     iconSrc: "/GFG.png",
   },

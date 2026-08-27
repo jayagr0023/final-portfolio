@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Code2, Database, Zap, Brain } from "lucide-react";
+import { TechOrbitSection } from "@/components/TechOrbitSection";
 
 const skills = [
   {
@@ -66,7 +67,7 @@ export function SkillsSection() {
           </blockquote>
         </div>
 
-        <div className="grid md:grid-cols-2  gap-6">
+        <div className="grid md:grid-cols-2 gap-6">
           {skills.map((skill, index) => {
             const Icon = skill.icon;
             return (
@@ -98,6 +99,10 @@ export function SkillsSection() {
               </Card>
             );
           })}
+        </div>
+
+        <div>
+          <TechOrbitSection />
         </div>
       </div>
     </section>

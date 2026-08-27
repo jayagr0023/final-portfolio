@@ -13,6 +13,25 @@ import { Navigation } from "@/components/Navigation";
 
 const MAJOR: Project[] = [
   {
+    id: "4",
+    title: "DivineTanyaa",
+    longDescription:
+      "A booking site built for a tarot and astrology practitioner — clients can browse services, check pricing and reviews, and reserve a slot through a scheduling system that handles availability and payments end to end.",
+    technologies: [
+      "HTML",
+      "Tailwind CSS",
+      "TypeScript",
+      "Express",
+      "MongoDB",
+      "Node.js",
+      "Cloudinary",
+      "RazorPay",
+      "Mapbox",
+    ],
+    demoUrl: "https://tarot-by-tanya.vercel.app/",
+    githubUrl: "https://github.com/Techie-AgrawalJi/tarotByTanya",
+  },
+  {
     id: "1",
     title: "VenueVista",
     longDescription:
@@ -29,7 +48,6 @@ const MAJOR: Project[] = [
     ],
     demoUrl: "https://venue-vista-rosy.vercel.app/",
     githubUrl: "https://github.com/Techie-AgrawalJi/VenueVista",
-    imageUrl: "VV.png",
   },
   {
     id: "2",
@@ -51,7 +69,6 @@ const MAJOR: Project[] = [
     ],
     demoUrl: "https://homie-bites.vercel.app/",
     githubUrl: "https://github.com/Techie-AgrawalJi/HomieBites",
-    imageUrl: "HB.png",
   },
   {
     id: "3",
@@ -71,7 +88,6 @@ const MAJOR: Project[] = [
     ],
     demoUrl: null,
     githubUrl: null,
-    imageUrl: null,
   },
 ];
 
@@ -91,7 +107,6 @@ const MINOR: Project[] = [
     ],
     demoUrl: "https://todo-app-create-task.vercel.app/",
     githubUrl: "https://github.com/Techie-AgrawalJi/Todo-App",
-    imageUrl: "todo.png",
   },
   {
     id: "2",
@@ -101,7 +116,6 @@ const MINOR: Project[] = [
     technologies: ["HTML", "JavaScript", "CSS"],
     demoUrl: "https://techie-agrawalji.github.io/RPG/",
     githubUrl: "https://github.com/Techie-AgrawalJi/RPG",
-    imageUrl: "RPG.png",
   },
   {
     id: "3",
@@ -111,7 +125,6 @@ const MINOR: Project[] = [
     technologies: ["HTML", "JavaScript", "CSS"],
     demoUrl: "https://techie-agrawalji.github.io/CalorieCounter/",
     githubUrl: "https://github.com/Techie-AgrawalJi/CalorieCounter",
-    imageUrl: "CC.png",
   },
   {
     id: "4",
@@ -121,7 +134,6 @@ const MINOR: Project[] = [
     technologies: ["HTML", "CSS", "JavaScript"],
     demoUrl: "https://techie-agrawalji.github.io/MY_Portfolio/",
     githubUrl: "https://github.com/Techie-AgrawalJi/MY_Portfolio",
-    imageUrl: "portfolio.png",
   },
   {
     id: "5",
@@ -131,7 +143,6 @@ const MINOR: Project[] = [
     technologies: ["HTML", "CSS", "JavaScript"],
     demoUrl: "https://techie-agrawalji.github.io/RPS_Game/",
     githubUrl: "https://github.com/Techie-AgrawalJi/RPS_Game",
-    imageUrl: "RPS.png",
   },
 ];
 
@@ -170,7 +181,6 @@ export default function Projects() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {MAJOR.map((project, index) => {
-              const bgImage = project.imageUrl ? project.imageUrl : null;
               return (
                 <Card
                   key={project.id}
@@ -184,19 +194,7 @@ export default function Projects() {
                   }}
                   data-testid={`project-card-${project.id}`}
                 >
-                  {bgImage && (
-                    <>
-                      <div
-                        className="absolute inset-0 bg-cover bg-center opacity-10 pointer-events-none"
-                        style={{ backgroundImage: `url(${bgImage})` }}
-                        aria-hidden="true"
-                      />
-                      <div
-                        className="absolute inset-0 from-background/70 via-background/80 to-background/90 pointer-events-none"
-                        aria-hidden="true"
-                      />
-                    </>
-                  )}
+                  
                   <CardHeader>
                     <div className="flex items-start justify-between gap-2">
                       <CardTitle

@@ -37,7 +37,7 @@ const socialLinks = [
     icon: Linkedin,
     label: "LinkedIn",
     value: "linkedin.com/JayAgrawal",
-    href: "www.linkedin.com/in/techie-agrawalji",
+    href: "https://www.linkedin.com/in/jayagr0023",
     color: "from-blue-600 to-blue-800",
   },
 
