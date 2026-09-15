@@ -12,6 +12,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { Achievement, certificate } from "@shared/schema";
 import { Document, Page, pdfjs } from "react-pdf";
+import { useQuery } from "@tanstack/react-query";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -23,22 +24,31 @@ const RESUME_PDF = "/jay_resume.pdf";
 type DsaAchievement = Omit<Achievement, "link"> & {
   link: string;
   iconSrc: string;
+  platform: "leetcode" | "gfg";
 };
 
 const DSA: DsaAchievement[] = [
   {
     id: "1",
-    title: "250+ Problems Solved",
+    title: "LeetCode",
     link: "https://leetcode.com/u/AgJi232427/",
     iconSrc: "/LC.png",
+    platform: "leetcode",
   },
   {
     id: "2",
-    title: "70+ Problems Solved",
+    title: "GFG",
     link: "https://www.geeksforgeeks.org/profile/2802jayagji/?tab=activity",
     iconSrc: "/GFG.png",
+    platform: "gfg",
   },
 ];
+
+type CodingStats = {
+  leetcodeSolved: number | null;
+  gfgSolved: number | null;
+  updatedAt: string;
+};
 
 const CERTIFICATES: certificate[] = [
   {
@@ -93,6 +103,11 @@ interface ResumeProps {
 }
 
 export default function Resume({ showNavigation = true }: ResumeProps) {
+  const codingStats = useQuery<CodingStats>({
+    queryKey: ["/api/coding-stats"],
+    refetchInterval: 5 * 60 * 1000,
+    staleTime: 0,
+  });
   const mobilePdfContainerRef = useRef<HTMLDivElement | null>(null);
   const [previewImage, setPreviewImage] = useState<{
     src: string;
@@ -276,7 +291,22 @@ export default function Resume({ showNavigation = true }: ResumeProps) {
               </h1>
             </div>
             <div className="content grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4 mb-4">
-              {DSA.map((achievement) => (
+              {DSA.map((achievement) => {
+                const solved =
+                  achievement.platform === "leetcode"
+                    ? codingStats.data?.leetcodeSolved
+                    : codingStats.data?.gfgSolved;
+                const solvedLabel = codingStats.isLoading
+                  ? "Loading solved count..."
+                  : solved == null
+                    ? "Solved count unavailable"
+                    : "Problems Solved";
+                const solvedColor =
+                  achievement.platform === "leetcode"
+                    ? "text-[#ffa116]"
+                    : "text-green-500";
+
+                return (
                 <Card key={achievement.id} className="animate-slide-up">
                   <CardHeader className="pb-4">
                     <CardTitle className="flex items-center justify-between gap-3">
@@ -286,7 +316,14 @@ export default function Resume({ showNavigation = true }: ResumeProps) {
                           className="h-8 w-8 rounded-sm object-contain shrink-0"
                         />
                         <h3 className="text-base lg:text-lg font-semibold truncate">
-                          {achievement.title}
+                          {achievement.title}: {codingStats.isLoading || solved == null ? (
+                            solvedLabel
+                          ) : (
+                            <>
+                              <span className={solvedColor}>{solved}</span>{" "}
+                              {solvedLabel}
+                            </>
+                          )}
                         </h3>
                       </div>
                       <a
@@ -301,7 +338,8 @@ export default function Resume({ showNavigation = true }: ResumeProps) {
                     </CardTitle>
                   </CardHeader>
                 </Card>
-              ))}
+                );
+              })}
             </div>
           </div>
           <div className="Certificates ">
