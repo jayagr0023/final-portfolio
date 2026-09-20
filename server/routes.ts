@@ -14,6 +14,11 @@ type ProxiedImage = {
   buffer: Buffer;
 };
 
+const LAST_KNOWN_CODING_STATS = {
+  leetcodeSolved: 312,
+  gfgSolved: 70,
+};
+
 async function fetchWithTimeout(
   url: string,
   options: RequestInit,
@@ -94,6 +99,8 @@ async function fetchGfgSolved(
     const patterns = [
       /"total_problems_solved"\s*:\s*"?(\d+)"?/i,
       /total_problems_solved\\"\s*:\s*"?(\d+)"?/i,
+      /"(?:totalProblemsSolved|problemsSolved|problemSolved|solvedProblems)"\s*:\s*"?(\d+)"?/i,
+      /(?:totalProblemsSolved|problemsSolved|problemSolved|solvedProblems)\\?"\s*:\s*\\?"(\d+)/i,
     ];
 
     for (const pattern of patterns) {
@@ -354,19 +361,23 @@ export function registerRoutes(app: Express): void {
 
       const leetcodeSolved =
         leetcodeResult.status === "fulfilled"
-          ? (leetcodeResult.value?.all ?? null)
-          : null;
-      const gfgSolved = gfgResult.status === "fulfilled" ? gfgResult.value : null;
+          ? (leetcodeResult.value?.all ?? LAST_KNOWN_CODING_STATS.leetcodeSolved)
+          : LAST_KNOWN_CODING_STATS.leetcodeSolved;
+      const gfgSolved =
+        gfgResult.status === "fulfilled"
+          ? (gfgResult.value ?? LAST_KNOWN_CODING_STATS.gfgSolved)
+          : LAST_KNOWN_CODING_STATS.gfgSolved;
 
+      res.setHeader("Cache-Control", "public, max-age=300, s-maxage=300, stale-while-revalidate=600");
       res.json({
         leetcodeSolved,
         gfgSolved,
         updatedAt: new Date().toISOString(),
       });
     } catch (_error) {
+      res.setHeader("Cache-Control", "public, max-age=300, s-maxage=300, stale-while-revalidate=600");
       res.status(200).json({
-        leetcodeSolved: null,
-        gfgSolved: null,
+        ...LAST_KNOWN_CODING_STATS,
         updatedAt: new Date().toISOString(),
       });
     }
