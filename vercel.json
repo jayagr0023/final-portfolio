@@ -9,6 +9,10 @@
   },
   "routes": [
     {
+      "src": "/api/coding-stats",
+      "dest": "/api/coding-stats.ts"
+    },
+    {
       "src": "/api/(.*)",
       "dest": "/api/index.ts"
     },
