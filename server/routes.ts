@@ -368,14 +368,14 @@ export function registerRoutes(app: Express): void {
           ? (gfgResult.value ?? LAST_KNOWN_CODING_STATS.gfgSolved)
           : LAST_KNOWN_CODING_STATS.gfgSolved;
 
-      res.setHeader("Cache-Control", "public, max-age=300, s-maxage=300, stale-while-revalidate=600");
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
       res.json({
         leetcodeSolved,
         gfgSolved,
         updatedAt: new Date().toISOString(),
       });
     } catch (_error) {
-      res.setHeader("Cache-Control", "public, max-age=300, s-maxage=300, stale-while-revalidate=600");
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
       res.status(200).json({
         ...LAST_KNOWN_CODING_STATS,
         updatedAt: new Date().toISOString(),
