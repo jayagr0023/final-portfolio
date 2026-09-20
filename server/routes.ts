@@ -14,10 +14,38 @@ type ProxiedImage = {
   buffer: Buffer;
 };
 
+type SourceStatus = "live" | "fallback";
+
+type CodingStatsPayload = {
+  leetcodeSolved: number;
+  gfgSolved: number;
+  source: {
+    leetcode: SourceStatus;
+    gfg: SourceStatus;
+  };
+  updatedAt: string;
+};
+
+const LEETCODE_USERNAME = "AgJi232427";
+const GFG_HANDLE = "2802jayagji";
+
+// Used only when a live fetch has never succeeded since the server started.
 const LAST_KNOWN_CODING_STATS = {
   leetcodeSolved: 312,
   gfgSolved: 70,
 };
+
+// Realistic browser headers. Bare "Mozilla/5.0" is often blocked from cloud IPs.
+const BROWSER_HEADERS: Record<string, string> = {
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+  "Accept-Language": "en-US,en;q=0.9",
+};
+
+// In-memory state. Note: on serverless platforms this may reset between invocations.
+const CODING_STATS_TTL_MS = 10 * 60 * 1000;
+let codingStatsCache: { data: CodingStatsPayload; at: number } | null = null;
+const lastGoodStats = { ...LAST_KNOWN_CODING_STATS };
 
 async function fetchWithTimeout(
   url: string,
@@ -47,21 +75,45 @@ async function fetchLeetCodeStats(
     variables: { username },
   };
 
-  const response = await fetchWithTimeout("https://leetcode.com/graphql/", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  }, timeoutMs);
+  const response = await fetchWithTimeout(
+    "https://leetcode.com/graphql/",
+    {
+      method: "POST",
+      headers: {
+        ...BROWSER_HEADERS,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Referer: `https://leetcode.com/u/${username}/`,
+        Origin: "https://leetcode.com",
+      },
+      body: JSON.stringify(body),
+    },
+    timeoutMs,
+  );
 
   if (!response.ok) {
+    const text = await response.text().catch(() => "");
+    console.error(
+      "[leetcode] request failed:",
+      response.status,
+      text.slice(0, 200).replace(/\s+/g, " "),
+    );
     return null;
   }
 
-  const data = await response.json();
+  let data: any;
+  try {
+    data = await response.json();
+  } catch {
+    console.error("[leetcode] response was not valid JSON (possible bot challenge page)");
+    return null;
+  }
+
   const rows: Array<{ difficulty: string; count: number }> | undefined =
     data?.data?.matchedUser?.submitStatsGlobal?.acSubmissionNum;
 
   if (!rows || !Array.isArray(rows)) {
+    console.error("[leetcode] unexpected response shape:", JSON.stringify(data).slice(0, 200));
     return null;
   }
 
@@ -78,18 +130,58 @@ async function fetchLeetCodeStats(
   };
 }
 
-async function fetchLeetCodeSolved(
-  username: string,
+async function fetchGfgSolvedFromApi(
+  profileHandle: string,
   timeoutMs = 7000,
 ): Promise<number | null> {
-  const stats = await fetchLeetCodeStats(username, timeoutMs);
-  return stats?.all ?? null;
+  const response = await fetchWithTimeout(
+    `https://authapi.geeksforgeeks.org/api-get/user-profile-info/?handle=${encodeURIComponent(
+      profileHandle,
+    )}&article_count=false&redirect=true`,
+    {
+      headers: {
+        ...BROWSER_HEADERS,
+        Accept: "application/json",
+      },
+    },
+    timeoutMs,
+  );
+
+  if (!response.ok) {
+    console.error("[gfg api] request failed:", response.status);
+    return null;
+  }
+
+  let json: any;
+  try {
+    json = await response.json();
+  } catch {
+    console.error("[gfg api] response was not valid JSON");
+    return null;
+  }
+
+  const solved = Number(json?.info?.total_problems_solved);
+  if (!Number.isFinite(solved)) {
+    console.error("[gfg api] unexpected response shape:", JSON.stringify(json).slice(0, 200));
+    return null;
+  }
+
+  return solved;
 }
 
 async function fetchGfgSolved(
   profileHandle: string,
   timeoutMs = 7000,
 ): Promise<number | null> {
+  // 1) Preferred: JSON endpoint (more reliable than scraping HTML).
+  try {
+    const fromApi = await fetchGfgSolvedFromApi(profileHandle, timeoutMs);
+    if (fromApi != null) return fromApi;
+  } catch (error) {
+    console.error("[gfg api] error:", error instanceof Error ? error.message : error);
+  }
+
+  // 2) Fallback: scrape the profile page HTML.
   const urls = [
     `https://www.geeksforgeeks.org/profile/${profileHandle}?tab=activity`,
     `https://www.geeksforgeeks.org/profile/${profileHandle}`,
@@ -115,24 +207,81 @@ async function fetchGfgSolved(
 
   for (const url of urls) {
     try {
-      const response = await fetchWithTimeout(url, {
-        headers: {
-          "User-Agent": "Mozilla/5.0",
-          Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      const response = await fetchWithTimeout(
+        url,
+        {
+          headers: {
+            ...BROWSER_HEADERS,
+            Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          },
         },
-      }, timeoutMs);
+        timeoutMs,
+      );
 
-      if (!response.ok) continue;
+      if (!response.ok) {
+        console.error("[gfg html] request failed:", response.status, url);
+        continue;
+      }
 
       const html = await response.text();
       const solved = extractSolved(html);
       if (solved != null) return solved;
-    } catch {
+
+      console.error("[gfg html] solved count not found in page:", url);
+    } catch (error) {
+      console.error(
+        "[gfg html] error:",
+        error instanceof Error ? error.message : error,
+        url,
+      );
       // Try next URL variant.
     }
   }
 
   return null;
+}
+
+async function getCodingStats(): Promise<CodingStatsPayload> {
+  if (codingStatsCache && Date.now() - codingStatsCache.at < CODING_STATS_TTL_MS) {
+    return codingStatsCache.data;
+  }
+
+  const [leetcodeResult, gfgResult] = await Promise.allSettled([
+    fetchLeetCodeStats(LEETCODE_USERNAME),
+    fetchGfgSolved(GFG_HANDLE),
+  ]);
+
+  if (leetcodeResult.status === "rejected") {
+    console.error("[leetcode] error:", leetcodeResult.reason);
+  }
+  if (gfgResult.status === "rejected") {
+    console.error("[gfg] error:", gfgResult.reason);
+  }
+
+  const leetcodeLive =
+    leetcodeResult.status === "fulfilled" ? (leetcodeResult.value?.all ?? null) : null;
+  const gfgLive = gfgResult.status === "fulfilled" ? gfgResult.value : null;
+
+  // Remember the last successful value so a temporary block doesn't reset to stale hardcoded numbers.
+  if (leetcodeLive != null) lastGoodStats.leetcodeSolved = leetcodeLive;
+  if (gfgLive != null) lastGoodStats.gfgSolved = gfgLive;
+
+  const data: CodingStatsPayload = {
+    leetcodeSolved: lastGoodStats.leetcodeSolved,
+    gfgSolved: lastGoodStats.gfgSolved,
+    source: {
+      leetcode: leetcodeLive != null ? "live" : "fallback",
+      gfg: gfgLive != null ? "live" : "fallback",
+    },
+    updatedAt: new Date().toISOString(),
+  };
+
+  // Only cache when both are live, so failures are retried on the next request.
+  if (leetcodeLive != null && gfgLive != null) {
+    codingStatsCache = { data, at: Date.now() };
+  }
+
+  return data;
 }
 
 async function fetchLeetCodeProfileImage(username: string): Promise<string | null> {
@@ -142,13 +291,26 @@ async function fetchLeetCodeProfileImage(username: string): Promise<string | nul
     variables: { username },
   };
 
-  const response = await fetchWithTimeout("https://leetcode.com/graphql/", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  }, 7000);
+  const response = await fetchWithTimeout(
+    "https://leetcode.com/graphql/",
+    {
+      method: "POST",
+      headers: {
+        ...BROWSER_HEADERS,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Referer: `https://leetcode.com/u/${username}/`,
+        Origin: "https://leetcode.com",
+      },
+      body: JSON.stringify(body),
+    },
+    7000,
+  );
 
-  if (!response.ok) return null;
+  if (!response.ok) {
+    console.error("[leetcode avatar] request failed:", response.status);
+    return null;
+  }
 
   const data = await response.json();
   const avatar = data?.data?.matchedUser?.profile?.userAvatar;
@@ -156,14 +318,21 @@ async function fetchLeetCodeProfileImage(username: string): Promise<string | nul
 }
 
 async function fetchGfgProfileImage(profileHandle: string): Promise<string | null> {
-  const response = await fetchWithTimeout(`https://www.geeksforgeeks.org/profile/${profileHandle}`, {
-    headers: {
-      "User-Agent": "Mozilla/5.0",
-      Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+  const response = await fetchWithTimeout(
+    `https://www.geeksforgeeks.org/profile/${profileHandle}`,
+    {
+      headers: {
+        ...BROWSER_HEADERS,
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      },
     },
-  }, 7000);
+    7000,
+  );
 
-  if (!response.ok) return null;
+  if (!response.ok) {
+    console.error("[gfg avatar] request failed:", response.status);
+    return null;
+  }
 
   const html = await response.text();
   const patterns = [
@@ -183,9 +352,9 @@ async function fetchGfgProfileImage(profileHandle: string): Promise<string | nul
 
 function getProfilePageUrl(platform: "leetcode" | "gfg"): string {
   if (platform === "leetcode") {
-    return "https://leetcode.com/u/AgJi232427/";
+    return `https://leetcode.com/u/${LEETCODE_USERNAME}/`;
   }
-  return "https://www.geeksforgeeks.org/profile/2802jayagji/?tab=activity";
+  return `https://www.geeksforgeeks.org/profile/${GFG_HANDLE}?tab=activity`;
 }
 
 function getScreenshotCandidates(platform: "leetcode" | "gfg", cacheBust?: string): string[] {
@@ -193,10 +362,10 @@ function getScreenshotCandidates(platform: "leetcode" | "gfg", cacheBust?: strin
 
   if (platform === "leetcode") {
     return [
-      `https://leetcard.jacoblin.cool/AgJi232427?theme=dark&font=ABeeZee&ext=heatmap&cb=${bust}`,
-      `https://image.thum.io/get/width/1200/noanimate/https://leetcode.com/u/AgJi232427/?cb=${bust}`,
-      `https://s.wordpress.com/mshots/v1/${encodeURIComponent(`https://leetcode.com/u/AgJi232427/?cb=${bust}`)}?w=1200`,
-      `https://s.wordpress.com/mshots/v1/${encodeURIComponent(`https://leetcode.com/u/AgJi232427/?cb=${bust}`)}?w=800`,
+      `https://leetcard.jacoblin.cool/${LEETCODE_USERNAME}?theme=dark&font=ABeeZee&ext=heatmap&cb=${bust}`,
+      `https://image.thum.io/get/width/1200/noanimate/https://leetcode.com/u/${LEETCODE_USERNAME}/?cb=${bust}`,
+      `https://s.wordpress.com/mshots/v1/${encodeURIComponent(`https://leetcode.com/u/${LEETCODE_USERNAME}/?cb=${bust}`)}?w=1200`,
+      `https://s.wordpress.com/mshots/v1/${encodeURIComponent(`https://leetcode.com/u/${LEETCODE_USERNAME}/?cb=${bust}`)}?w=800`,
     ];
   }
 
@@ -212,12 +381,16 @@ function getScreenshotCandidates(platform: "leetcode" | "gfg", cacheBust?: strin
 }
 
 async function fetchImageCandidate(url: string, timeoutMs = 4500): Promise<ProxiedImage> {
-  const imageResponse = await fetchWithTimeout(url, {
-    headers: {
-      "User-Agent": "Mozilla/5.0",
-      Accept: "image/*,*/*;q=0.8",
+  const imageResponse = await fetchWithTimeout(
+    url,
+    {
+      headers: {
+        ...BROWSER_HEADERS,
+        Accept: "image/*,*/*;q=0.8",
+      },
     },
-  }, timeoutMs);
+    timeoutMs,
+  );
 
   if (!imageResponse.ok) {
     throw new Error(`Candidate request failed: ${imageResponse.status}`);
@@ -353,31 +526,16 @@ export function registerRoutes(app: Express): void {
   });
 
   app.get("/api/coding-stats", async (_req, res) => {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+
     try {
-      const [leetcodeResult, gfgResult] = await Promise.allSettled([
-        fetchLeetCodeStats("AgJi232427"),
-        fetchGfgSolved("2802jayagji"),
-      ]);
-
-      const leetcodeSolved =
-        leetcodeResult.status === "fulfilled"
-          ? (leetcodeResult.value?.all ?? LAST_KNOWN_CODING_STATS.leetcodeSolved)
-          : LAST_KNOWN_CODING_STATS.leetcodeSolved;
-      const gfgSolved =
-        gfgResult.status === "fulfilled"
-          ? (gfgResult.value ?? LAST_KNOWN_CODING_STATS.gfgSolved)
-          : LAST_KNOWN_CODING_STATS.gfgSolved;
-
-      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
-      res.json({
-        leetcodeSolved,
-        gfgSolved,
-        updatedAt: new Date().toISOString(),
-      });
-    } catch (_error) {
-      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+      const data = await getCodingStats();
+      res.json(data);
+    } catch (error) {
+      console.error("[coding-stats] unexpected error:", error);
       res.status(200).json({
-        ...LAST_KNOWN_CODING_STATS,
+        ...lastGoodStats,
+        source: { leetcode: "fallback", gfg: "fallback" },
         updatedAt: new Date().toISOString(),
       });
     }
@@ -386,8 +544,8 @@ export function registerRoutes(app: Express): void {
   app.get("/api/profile-images", async (_req, res) => {
     try {
       const [leetcodeImageUrl, gfgImageUrl] = await Promise.all([
-        fetchLeetCodeProfileImage("AgJi232427"),
-        fetchGfgProfileImage("2802jayagji"),
+        fetchLeetCodeProfileImage(LEETCODE_USERNAME),
+        fetchGfgProfileImage(GFG_HANDLE),
       ]);
 
       res.json({
@@ -430,13 +588,14 @@ export function registerRoutes(app: Express): void {
       }
 
       const [leetcodeStatsResult, gfgSolvedResult] = await Promise.allSettled([
-        fetchLeetCodeStats("AgJi232427", 2500),
-        fetchGfgSolved("2802jayagji", 2500),
+        fetchLeetCodeStats(LEETCODE_USERNAME, 2500),
+        fetchGfgSolved(GFG_HANDLE, 2500),
       ]);
 
       const leetcodeStats =
         leetcodeStatsResult.status === "fulfilled" ? leetcodeStatsResult.value : null;
       const gfgSolved = gfgSolvedResult.status === "fulfilled" ? gfgSolvedResult.value : null;
+      void gfgSolved;
 
       if (platform === "gfg") {
         // Do not serve synthetic heatmap cards for GFG. Let the client show retry/error UI.
@@ -460,5 +619,4 @@ export function registerRoutes(app: Express): void {
       res.status(500).json({ error: "Failed to proxy profile image" });
     }
   });
-
 }
