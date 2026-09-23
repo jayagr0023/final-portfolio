@@ -29,8 +29,8 @@ const socialLinks = [
   {
     icon: Github,
     label: "GitHub",
-    value: "github.com/Techie-AgrawalJi",
-    href: "https://github.com/Techie-AgrawalJi/",
+    value: "github.com/jayagr0023",
+    href: "https://github.com/jayagr0023/",
     color: "from-gray-600 to-gray-800",
   },
   {
