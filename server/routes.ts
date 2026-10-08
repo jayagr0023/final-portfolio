@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { storage } from "./storage";
-import { insertContactSchema } from "@shared/schema";
+import { insertContactSchema } from "../shared/schema";
 
 type LeetCodeStats = {
   all: number | null;
