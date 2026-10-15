@@ -13,7 +13,26 @@ import { Navigation } from "@/components/Navigation";
 
 const MAJOR: Project[] = [
   {
-    id: "1",
+    id: "4",
+    title: "LetsTalk",
+    longDescription:
+      "LetsTalk is a real-time chat application built with React, JavaScript, Node.js, Express, and MongoDB. It features JWT authentication for secure user access, allowing users to create accounts and log in. The app supports one-on-one and group chats, with messages stored in MongoDB for persistence. Real-time communication is enabled through WebSockets, providing instant message delivery. The interface is designed with Tailwind CSS for a responsive and user-friendly experience.",
+    technologies: [
+      "HTML",
+      "Tailwind CSS",
+      "JavaScript",
+      "React",
+      "Express",
+      "MongoDB",
+      "Node.js",
+      "JWT Authentication",
+      "WebSocket",
+    ],
+    demoUrl: "https://letstalk-official.vercel.app",
+    githubUrl: "https://github.com/jayagr0023/letstalk",
+  },
+  {
+    id: "3",
     title: "DivineTanyaa",
     longDescription:
       "A booking site built for a tarot and astrology practitioner — clients can browse services, check pricing and reviews, and reserve a slot through a scheduling system that handles availability and payments end to end.",
@@ -53,7 +72,7 @@ const MAJOR: Project[] = [
     githubUrl: "https://github.com/Techie-AgrawalJi/HomieBites",
   },
   {
-    id: "3",
+    id: "1",
     title: "VenueVista",
     longDescription:
       "A full-stack learning project built under mentorship, featuring venue listings with nearby hotel pricing, interactive maps, reviews & ratings, user authentication, and complete CRUD operations.",
@@ -70,26 +89,7 @@ const MAJOR: Project[] = [
     demoUrl: "https://venue-vista-rosy.vercel.app/",
     githubUrl: "https://github.com/Techie-AgrawalJi/VenueVista",
   },
-  
-  // {
-  //   id: "3",
-  //   title: "Talkie",
-  //   longDescription:
-  //     "Talkie is a real-time chat application built with React, TypeScript, Node.js, Express, and MongoDB. It features JWT authentication for secure user access, allowing users to create accounts and log in. The app supports one-on-one and group chats, with messages stored in MongoDB for persistence. Real-time communication is enabled through WebSockets, providing instant message delivery. The interface is designed with Tailwind CSS for a responsive and user-friendly experience.",
-  //   technologies: [
-  //     "HTML",
-  //     "Tailwind CSS",
-  //     "TypeScript",
-  //     "React",
-  //     "Express",
-  //     "MongoDB",
-  //     "Node.js",
-  //     "JWT Authentication",
-  //     "GSAP Animations",
-  //   ],
-  //   demoUrl: null,
-  //   githubUrl: null,
-  // },
+
 ];
 
 const MINOR: Project[] = [
@@ -164,7 +164,7 @@ export default function Projects({ showNavigation = true }: ProjectsProps) {
             Explore my portfolio of web applications, tools, and creative
             projects
           </p>
-        
+
         </div>
         <div className="first ">
           <div className="heading mb-4 text-center sm:text-left ">
@@ -197,7 +197,7 @@ export default function Projects({ showNavigation = true }: ProjectsProps) {
                   }}
                   data-testid={`project-card-${project.id}`}
                 >
-                  
+
                   <CardHeader>
                     <div className="flex items-start justify-between gap-2">
                       <CardTitle
